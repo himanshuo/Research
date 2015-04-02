@@ -26,7 +26,7 @@ ACCESS_TOKEN_SECRET=<access token secret><br/>
 oauth_signature_method="HMAC-SHA1"
  
  
- 
+ <li>run python3 get_data.py</li>
 </ol>
 
 
