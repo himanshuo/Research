@@ -12,7 +12,7 @@ Social media provides rich resource for learning a (new) language. Taken English
 <li>Create a Twitter application.</li>
 <li>Create a file called constants.py in the same directory.</li>
 
-<li>constants.py should look like:</li>
+<li>constants.py should look like(also in constants-sample.py):</li>
 <br/><br/>
 BASE_URL="https://stream.twitter.com/1.1/statuses/"<br/>
 TOKEN_URL=BASE_URL+"filter.json"<br/>
