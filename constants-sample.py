@@ -8,3 +8,5 @@ OAUTH_TOKEN=
 ACCESS_TOKEN_SECRET=
 
 oauth_signature_method="HMAC-SHA1"
+
+US=[-124, 30, -61, 49]

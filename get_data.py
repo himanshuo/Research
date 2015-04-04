@@ -8,6 +8,8 @@ from tweepy import Stream
 
 import json
 import pprint
+
+
 # Go to http://apps.twitter.com and create an app.
 # The consumer key and secret will be generated for you after
 consumer_key=CONSUMER_KEY
@@ -18,7 +20,7 @@ consumer_secret=CONSUMER_SECRET
 access_token=OAUTH_TOKEN
 access_token_secret=ACCESS_TOKEN_SECRET
 
-class StdOutListener(StreamListener):
+class DBListener(StreamListener):
     """ A listener handles tweets are the received from the stream.
     This is a basic listener that just prints received tweets to stdout.
     """
@@ -26,25 +28,24 @@ class StdOutListener(StreamListener):
 
     def on_data(self, data):
         data = json.loads(data)
-        pprint.pprint(data)
+        pprint.pprint(data['text'])
 
-        if self.fourtwentyerror:
-            return False
+
         return True
 
     def on_error(self, status_code):
         if status_code == 420:
             #returning False in on_data disconnects the stream
-            self.fourtwentyerror = True
+
             return False
 
 if __name__ == '__main__':
-    l = StdOutListener()
+    l = DBListener()
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
 
     stream = Stream(auth, l)
-    stream.filter(track=['basketball'], languages=['en'], async=True,)
+    stream.filter(languages=['en'], async=True, locations=US)
 
 
 

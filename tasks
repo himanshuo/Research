@@ -1,0 +1,18 @@
+TODO:
+
+1) stream by location.
+    figure out API
+    Can just pass in 4 location points in a list.
+        Twitter wants a comma seperated list of latlong points.
+        Twitter wants southwest corner coming first
+        NOTE: google maps has long lat. We want lat long. (reverse them)
+
+
+        SOUTHWEST US: (-124, 30)
+        NORTHEAST US: ( -61, 49)
+
+        THUS locations = [-124, 30, -61, 49]
+2) store data in db or whatever store
+3) run periodically (cron job or continuously running python script? )
+4) send email if there is an issue so we can figure out whats wrong.
+5) perhaps only get ascii values?
