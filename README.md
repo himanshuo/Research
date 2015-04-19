@@ -31,5 +31,5 @@ oauth_signature_method="HMAC-SHA1"
 
 
 
-This research is done by Professor Hongning Wang with help from UVA students Himanshu Ojha, and ...
+This research is done by Professor Hongning Wang with help from UVA students Himanshu Ojha, Aaren Barge, and Josephine Chiao.
  
