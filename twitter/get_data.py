@@ -5,7 +5,7 @@ from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
 
-
+import sendgrid
 import json
 import pprint
 
@@ -33,7 +33,7 @@ class DBListener(StreamListener):
         to perform some work prior to entering the read loop.
         """
 
-        #todo: set up connection to database here.
+        #todo: set up connection to database here. OR do it at toplevel.
 
         pass
 
@@ -48,6 +48,11 @@ class DBListener(StreamListener):
         #todo: make db format
         #todo: add to db
 
+
+
+        if 'warning' in data:
+            self.on_warning(data['warning'])
+
         return True
 
     def on_error(self, status_code):
@@ -55,9 +60,44 @@ class DBListener(StreamListener):
         if status_code == 420: #Rate Limited (too many login attempts)
             #returning False in on_data disconnects the stream
 
-            #todo: send email.
+            self.send_emails(  title="BROKEN. STATUS CODE == 420",
+                               content="BROKEN. STATUS CODE == 420")
 
             return False
+
+
+    def on_warning(self, warning):
+        if warning.get("percent_full", 0) > 80:
+            email_message = "percent_full exceeded 80% ( percent_full = %d ) so temporarily stopping stream." % warning.get("percent_full",0)
+            email_message += "\n"
+            email_message += warning.get('message','')
+
+            self.send_emails(  title=warning.get('code','WARNING'),
+                               content=email_message)
+            return False
+
+
+
+    def send_emails(self, title, content):
+        import pdb;pdb.set_trace()
+        sg_username = SG_USERNAME
+        sg_password = SG_PASS
+
+        sg = sendgrid.SendGridClient(sg_username, sg_password)
+        message = sendgrid.Mail()
+
+
+        message.set_from(FROM_EMAIL)
+        message.set_subject(title)
+        message.set_text(content)
+        for email in EMAIL_TO:
+            message.add_to(email)
+
+
+        sg.send(message)
+
+
+
 
 
 

@@ -12,16 +12,22 @@ TODO:
         NORTHEAST US: ( -61, 49)
 
         THUS locations = [-124, 30, -61, 49]
-2) handle status_codes.
+
+        Perhaps specify for 50 different states. Just to get more datapoints.
+2) 50 different states. Make seperate accounts for each.
+3) figure out how to auto-restart script if something breaks it.                                                    
+3) handle status_codes.
     only 200, 420, ... NOT very useful
-3) handle ERROR codes
+4) handle ERROR codes
     more useful. listed at bottom of get_data.py. how to access them?
-2) store data in db or whatever store
-3) run periodically (cron job or continuously running python script? )
-4) send email if there is an issue so we can figure out whats wrong.
-5) perhaps only get ascii values?
-6) https://dev.twitter.com/streaming/overview/messages-types#disconnect_messages
+5) store data in db or whatever store
+    figure out what db we all want to store data in.
+    figure out schema
+6) run periodically (cron job or continuously running python script? )
+7) send email if there is an issue so we can figure out whats wrong.                                                DONE
+8) perhaps only get ascii values?
+9) https://dev.twitter.com/streaming/overview/messages-types#disconnect_messages
     handle diff types of disconnect messages.
     other stuff on this page.
-7) enable stall warnings.
+10) enable stall warnings.
     These help tell you when to cut down connection due to potential future issues
