@@ -15,7 +15,7 @@ TODO:
 
         Perhaps specify for 50 different states. Just to get more datapoints.
 2) 50 different states. Make seperate accounts for each.
-3) figure out how to auto-restart script if something breaks it.                                                    
+3) figure out how to auto-restart script if something breaks it.
 3) handle status_codes.
     only 200, 420, ... NOT very useful
 4) handle ERROR codes
