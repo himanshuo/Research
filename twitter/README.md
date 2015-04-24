@@ -6,6 +6,29 @@ Social media provides rich resource for learning a (new) language. Taken English
 
 
 
+#Usage
+<ol>
+<li>Create a developer account on Twitter. </li>
+<li>Create a Twitter application.</li>
+<li>Create a file called constants.py in the same directory.</li>
+
+<li>constants.py should look like(also in constants-sample.py):</li>
+<br/><br/>
+BASE_URL="https://stream.twitter.com/1.1/statuses/"<br/>
+TOKEN_URL=BASE_URL+"filter.json"<br/>
+SAMPLE_URL=BASE_URL+"sample.json"<br/>
+<br/>
+CONSUMER_KEY=<consumer key><br/>
+CONSUMER_SECRET=<consumer secret><br/>
+OAUTH_TOKEN=<oauth token><br/>
+ACCESS_TOKEN_SECRET=<access token secret><br/>
+<br/>
+oauth_signature_method="HMAC-SHA1"
+ 
+ 
+ <li>run python3 get_data.py</li>
+</ol>
+
 
 
 This research is done by Professor Hongning Wang with help from UVA students Himanshu Ojha, Aaren Barge, and Josephine Chiao.
