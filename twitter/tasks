@@ -16,3 +16,6 @@ TODO:
 3) run periodically (cron job or continuously running python script? )
 4) send email if there is an issue so we can figure out whats wrong.
 5) perhaps only get ascii values?
+6) https://dev.twitter.com/streaming/overview/messages-types#disconnect_messages
+    handle diff types of disconnect messages.
+    other stuff on this page.
