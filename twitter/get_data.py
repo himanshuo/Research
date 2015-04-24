@@ -26,18 +26,40 @@ class DBListener(StreamListener):
     """
 
 
+    def on_connect(self):
+        """Called once connected to streaming server.
+        This will be invoked once a successful response
+        is received from the server. Allows the listener
+        to perform some work prior to entering the read loop.
+        """
+
+        #todo: set up connection to database here.
+
+        pass
+
+    def _stream_to_db_format(self, raw_data):
+        #todo: convert from raw_data to db format
+        pass
+
     def on_data(self, data):
         data = json.loads(data)
-        pprint.pprint(data['text'])
+        # pprint.pprint(data['text'])
 
+        #todo: make db format
+        #todo: add to db
 
         return True
 
     def on_error(self, status_code):
-        if status_code == 420:
+
+        if status_code == 420: #Rate Limited (too many login attempts)
             #returning False in on_data disconnects the stream
 
+            #todo: send email.
+
             return False
+
+
 
 if __name__ == '__main__':
     l = DBListener()
@@ -124,4 +146,52 @@ RETURNED DATA FROM twitter is in the form:
     "lang": "en",
     "timestamp_ms": "1428012975080"
 }
+"""
+
+
+
+
+
+"""
+ERROR CODES THAT TWITTER SENDS:
+
+Code	Name	Description
+1	Shutdown	The feed was shutdown (possibly a machine restart)
+2	Duplicate stream	The same endpoint was connected too many times.
+3	Control request	Control streams was used to close a stream (applies to sitestreams).
+4	Stall	The client was reading too slowly and was disconnected by the server.
+5	Normal	The client appeared to have initiated a disconnect.
+6	Token revoked	An oauth token was revoked for a user (applies to site and userstreams).
+7	Admin logout	The same credentials were used to connect a new stream and the oldest was disconnected.
+8		Reserved for internal use. Will not be delivered to external clients.
+9	Max message limit	The stream connected with a negative count parameter and was disconnected after all backfill was delivered.
+10	Stream exception	An internal issue disconnected the stream.
+11	Broker stall	An internal issue disconnected the stream.
+12	Shed load	The host the stream was connected to became overloaded and streams were disconnected to balance load. Reconnect as usual.
+"""
+
+
+"""
+STALL WARNINGS ARE USEFUL. ENABLE THEM.
+
+Stall warnings (warning)
+When connected to a stream using the stall_warnings parameter, you may receive status notices indicating the current health of the connection. See the stall_warnings documentation for more information.
+
+{
+  "warning":{
+    "code":"FALLING_BEHIND",
+    "message":"Your connection is falling behind and messages are being queued for delivery to you. Your queue is now over 60% full. You will be disconnected when the queue is full.",
+    "percent_full": 60
+  }
+}
+Note that in the case of Site Streams warning messages apply to the entire stream and will not be wrapped with a for_user envelope.
+
+
+"""
+
+
+
+"""
+STATUS CODES TO CHECK FOR:
+https://dev.twitter.com/streaming/overview/connecting
 """
