@@ -1,10 +1,10 @@
 from __future__ import absolute_import, print_function
 from constants import *
-
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
 
+import time
 import sendgrid
 import json
 import pprint
@@ -61,9 +61,12 @@ class DBListener(StreamListener):
             #returning False in on_data disconnects the stream
 
             self.send_emails(  title="BROKEN. STATUS CODE == 420",
-                               content="BROKEN. STATUS CODE == 420")
+                               content="BROKEN. STATUS CODE == 420. Rate Limited (too many login attempts) ")
 
             return False
+
+
+        return False
 
 
     def on_warning(self, warning):
@@ -79,7 +82,7 @@ class DBListener(StreamListener):
 
 
     def send_emails(self, title, content):
-        import pdb;pdb.set_trace()
+
         sg_username = SG_USERNAME
         sg_password = SG_PASS
 
@@ -101,13 +104,23 @@ class DBListener(StreamListener):
 
 
 
+
+
+
+
+
+
+
 if __name__ == '__main__':
     l = DBListener()
+    import pdb;pdb.set_trace()
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
-
-    stream = Stream(auth, l)
-    stream.filter(languages=['en'], async=True, locations=US)
+    try:
+        stream = Stream(auth, l)
+        stream.filter(languages=['en'], async=True, locations=US, stall_warnings=True)
+    except:
+        l.send_emails(title="Python Script Failed", content="Python Script Failed. Must Manually Restart Script.")
 
 
 

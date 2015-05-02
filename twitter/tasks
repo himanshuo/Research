@@ -16,18 +16,46 @@ TODO:
         Perhaps specify for 50 different states. Just to get more datapoints.
 2) 50 different states. Make seperate accounts for each.
 3) figure out how to auto-restart script if something breaks it.
-3) handle status_codes.
+    plan is:
+        1) if twitter connection error (something for which twitter gives error code), then fix issue in code.
+            need to figure out a way to stop the streaming for a while and then restart it up again.
+                IDEAS:
+                    1) just have timer wait for a few min.
+                    2)
+           WAIT. I THINK that Streaming api already handles automatically sleeping and then restarting!
+           WHY? There are a bunch of "sleep" and "retry_time_start" in the streaming.py code
+        2) if python script crashes, then manually rerun it.
+            There is some very BIG problem that needs to be fixed.
+        3) email in BOTH cases.
+    MAYBE DONE. NEED TO CHECK.
+3) handle status_codes.                                                                                             DONE
     only 200, 420, ... NOT very useful
-4) handle ERROR codes
+4) handle ERROR codes                                                                                               DONE
     more useful. listed at bottom of get_data.py. how to access them?
+    error codes sent whenever the stream fails
+    USEFUL ERROR CODES:
+        1	Shutdown	The feed was shutdown (possibly a machine restart)     -> restart
+        2	Duplicate stream	The same endpoint was connected too many times.   -> stop
+        4	Stall	The client was reading too slowly and was disconnected by the server. -> restart
+        5	Normal	The client appeared to have initiated a disconnect.                   -> restart
+        7	Admin logout   same credentials used to connect to new stream and oldest disconnected.  -> restart
+        10	Stream exception	An internal issue disconnected the stream.   -> restart
+        11	Broker stall	An internal issue disconnected the stream.     -> restart
+        12	Shed load	The host the stream was connected to became overloaded. -> restart
+
+        THUS, just restart if error is thrown. If duplicate stream error, then just stop stream.
+            restart should be happening automatically. really need to check.
+                    and actually the 420 error code RATE LIMITING handles this already...
+
 5) store data in db or whatever store
     figure out what db we all want to store data in.
     figure out schema
-6) run periodically (cron job or continuously running python script? )
+6) run periodically (cron job or continuously running python script? )                                              DONE
 7) send email if there is an issue so we can figure out whats wrong.                                                DONE
 8) perhaps only get ascii values?
 9) https://dev.twitter.com/streaming/overview/messages-types#disconnect_messages
     handle diff types of disconnect messages.
     other stuff on this page.
-10) enable stall warnings.
+10) enable stall warnings.                                                                                          DONE
     These help tell you when to cut down connection due to potential future issues
+    1)figured out how to have tweepy use stall_warnings.
