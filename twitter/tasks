@@ -21,7 +21,6 @@ TODO:
             need to figure out a way to stop the streaming for a while and then restart it up again.
                 IDEAS:
                     1) just have timer wait for a few min.
-                    2)
            WAIT. I THINK that Streaming api already handles automatically sleeping and then restarting!
            WHY? There are a bunch of "sleep" and "retry_time_start" in the streaming.py code
         2) if python script crashes, then manually rerun it.
@@ -59,3 +58,17 @@ TODO:
 10) enable stall warnings.                                                                                          DONE
     These help tell you when to cut down connection due to potential future issues
     1)figured out how to have tweepy use stall_warnings.
+11) figure out how much data is actually being sent to me.                                                          DONE
+    https://twittercommunity.com/t/is-there-a-limit-to-the-amount-of-data-the-streaming-api-will-send-out/8482/5
+    ---Twitter sends me MAX of ~1% of all data that it gets per twitter-second.
+        twitter gets 500 million per day -> 5787 per sec.
+    ---{'limit': {'track': 13}} reveals that I hit the max rate.
+          13 is the number of tweets that were NOT sent to me at that twitter-second.
+    ---I am only asking for tweets that have been properly geotagged thus I am NOT getting all tweets.
+    ---how many tweets am I getting in a normal say 5 sec time period???
+            800 in 30 sec -> 26/sec -> 2 million per day -> 200 million in 100 days.
+            26 / 5787 = .05% which is actually pretty good considering that the stat is for the world.
+
+
+    MEANING we need to set up multiple get_data.py's.
+

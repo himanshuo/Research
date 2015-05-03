@@ -34,7 +34,7 @@ class DBListener(StreamListener):
         """
 
         #todo: set up connection to database here. OR do it at toplevel.
-
+        self.himanshu = 0
         pass
 
     def _stream_to_db_format(self, raw_data):
@@ -44,7 +44,11 @@ class DBListener(StreamListener):
     def on_data(self, data):
         data = json.loads(data)
         # pprint.pprint(data['text'])
-
+        # print('.',end="")
+        self.himanshu = self.himanshu+1
+        print(self.himanshu)
+        # if 'text' not in data:
+        #     print(data)
         #todo: make db format
         #todo: add to db
 
@@ -52,6 +56,7 @@ class DBListener(StreamListener):
 
         if 'warning' in data:
             self.on_warning(data['warning'])
+
 
         return True
 
@@ -83,21 +88,26 @@ class DBListener(StreamListener):
 
     def send_emails(self, title, content):
 
-        sg_username = SG_USERNAME
-        sg_password = SG_PASS
+        try:
+            sg_username = SG_USERNAME
+            sg_password = SG_PASS
 
-        sg = sendgrid.SendGridClient(sg_username, sg_password)
-        message = sendgrid.Mail()
-
-
-        message.set_from(FROM_EMAIL)
-        message.set_subject(title)
-        message.set_text(content)
-        for email in EMAIL_TO:
-            message.add_to(email)
-
-
-        sg.send(message)
+            sg = sendgrid.SendGridClient(sg_username, sg_password)
+            # message = sendgrid.Mail()
+            #
+            #
+            # message.set_from(FROM_EMAIL)
+            # message.set_subject(title)
+            # message.set_text(content)
+            # for email in EMAIL_TO:
+            #     message.add_to(email)
+            #
+            #
+            # sg.send(message)
+        except:
+            print("-----------------ERROR. EMAIL WAS NOT SENT------------------")
+            print(title)
+            print(content)
 
 
 
@@ -113,12 +123,14 @@ class DBListener(StreamListener):
 
 if __name__ == '__main__':
     l = DBListener()
-    import pdb;pdb.set_trace()
+
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
     try:
+
         stream = Stream(auth, l)
         stream.filter(languages=['en'], async=True, locations=US, stall_warnings=True)
+
     except:
         l.send_emails(title="Python Script Failed", content="Python Script Failed. Must Manually Restart Script.")
 
