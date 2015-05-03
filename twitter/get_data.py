@@ -34,7 +34,7 @@ class DBListener(StreamListener):
         """
 
         #todo: set up connection to database here. OR do it at toplevel.
-        self.himanshu = 0
+
         pass
 
     def _stream_to_db_format(self, raw_data):
@@ -43,10 +43,18 @@ class DBListener(StreamListener):
 
     def on_data(self, data):
         data = json.loads(data)
+
+        if 'limit' in data and 'track' in data['limit']:
+            return True # ignore current, continue to next tweet.
+
+
+
         # pprint.pprint(data['text'])
-        # print('.',end="")
-        self.himanshu = self.himanshu+1
-        print(self.himanshu)
+        print('.',end="", flush=True)
+
+
+
+
         # if 'text' not in data:
         #     print(data)
         #todo: make db format
@@ -93,17 +101,17 @@ class DBListener(StreamListener):
             sg_password = SG_PASS
 
             sg = sendgrid.SendGridClient(sg_username, sg_password)
-            # message = sendgrid.Mail()
-            #
-            #
-            # message.set_from(FROM_EMAIL)
-            # message.set_subject(title)
-            # message.set_text(content)
-            # for email in EMAIL_TO:
-            #     message.add_to(email)
-            #
-            #
-            # sg.send(message)
+            message = sendgrid.Mail()
+
+
+            message.set_from(FROM_EMAIL)
+            message.set_subject(title)
+            message.set_text(content)
+            for email in EMAIL_TO:
+                message.add_to(email)
+
+
+            sg.send(message)
         except:
             print("-----------------ERROR. EMAIL WAS NOT SENT------------------")
             print(title)
