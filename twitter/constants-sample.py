@@ -17,3 +17,10 @@ EMAIL_TO=['example@example.com']
 
 SG_USERNAME=''
 SG_PASS=''
+
+
+
+DB_NAME=""
+DB_HOST=""
+DB_USER=""
+DB_PASSWD=""

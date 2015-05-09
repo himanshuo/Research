@@ -3,7 +3,7 @@ from constants import *
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
-
+from db import DB
 import time
 import sendgrid
 import json
@@ -33,13 +33,11 @@ class DBListener(StreamListener):
         to perform some work prior to entering the read loop.
         """
 
-        #todo: set up connection to database here. OR do it at toplevel.
+        self.db = DB()
 
         pass
 
-    def _stream_to_db_format(self, raw_data):
-        #todo: convert from raw_data to db format
-        pass
+
 
     def on_data(self, data):
         data = json.loads(data)
@@ -49,16 +47,18 @@ class DBListener(StreamListener):
 
 
 
+
+
         # pprint.pprint(data['text'])
-        print('.',end="", flush=True)
+        #print('.',end="", flush=True)
 
 
+        if 'delete' in data and data['delete']:
+            return True #ignore deleted tweets.
 
+        if 'text' in data:
+             self.db.add_twitter_data(twitter_data=data)
 
-        # if 'text' not in data:
-        #     print(data)
-        #todo: make db format
-        #todo: add to db
 
 
 
@@ -206,7 +206,11 @@ RETURNED DATA FROM twitter is in the form:
     "retweet_count": 0,
     "favorite_count": 0,
     "entities": {
-        "hashtags": [],
+        'hashtags': [{'indices': [0, 11], 'text': 'internship'},
+                           {'indices': [12, 16], 'text': 'Job'},
+                           {'indices': [20, 34], 'text': 'RedwoodShores'},
+                           {'indices': [90, 95], 'text': 'Jobs'},
+                           {'indices': [96, 103], 'text': 'Hiring'}],
         "trends": [],
         "urls": [],
         "user_mentions": [],
