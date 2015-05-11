@@ -15,7 +15,7 @@ TODO:
 
         Perhaps specify for 50 different states. Just to get more datapoints.
 2) 50 different states. Make seperate accounts for each.
-3) figure out how to auto-restart script if something breaks it.
+3) figure out how to auto-restart script if something breaks it.                                                    DONE
     plan is:
         1) if twitter connection error (something for which twitter gives error code), then fix issue in code.
             need to figure out a way to stop the streaming for a while and then restart it up again.
@@ -46,7 +46,7 @@ TODO:
             restart should be happening automatically. really need to check.
                     and actually the 420 error code RATE LIMITING handles this already...
 
-5) store data in db or whatever store
+5) store data in db or whatever store                                                                               DONE
     figure out what db we all want to store data in.
     figure out schema
 6) run periodically (cron job or continuously running python script? )                                              DONE

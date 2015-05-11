@@ -18,6 +18,8 @@ class DB:
 
     def ascii_string(self, s):
         return ''.join(filter(lambda x: x in string.printable, s))
+
+
     def add_twitter_data(self, twitter_data):
 
         user = twitter_data.get('user')
