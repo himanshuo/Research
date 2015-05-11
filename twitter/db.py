@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import MySQLdb
+import mysql.connector
 from constants import DB_NAME, DB_HOST, DB_USER, DB_PASSWD
 import pprint
 import sys
@@ -10,14 +10,20 @@ import pytz
 class DB:
     def __init__(self):
         try:
-            self.db = MySQLdb.connect(host=DB_HOST,
-                         user=DB_USER,
-                          passwd=DB_PASSWD,
-                          db=DB_NAME)
-            self.cur = self.db.cursor(MySQLdb.cursors.DictCursor)
+
+            config = {
+              'user': DB_USER,
+              'password': DB_PASSWD,
+              'host': DB_HOST,
+              'database': DB_NAME,
+            }
+
+            self.db = mysql.connector.connect(**config)
+            self.cur = self.db.cursor()
             # TABLES:   Tweet, HashTag, HashTagTweet, User
         except:
             print('could not connect to db')
+
 
     def twitter_to_mysql_timestamp(self,twitter_time):
         if (not (twitter_time is None)) and (not (twitter_time == "")):
@@ -66,6 +72,7 @@ class DB:
 
 
 
+
         user_id = self.cur.lastrowid
         tweet_insert_query = """
                             INSERT INTO Tweet (
@@ -100,21 +107,36 @@ class DB:
 
 
 
+
         tweet_id = self.cur.lastrowid
             
         tags = twitter_data.get('entities').get('hashtags')
 
         for t in tags:
             try:
-                #todo: handle duplicates
-                self.cur.execute("INSERT INTO HashTag (tag) VALUES(%s)" , [ self.ascii_string( t.get('text','')) ])
+
+                #determine if tag already exists in db.
+                # if so,
+                #   then hashtag_id = previoustag.id
+                #   else create new tag; hashtag_id = newtag.id
+
+                tag_text = self.ascii_string(t.get('text',''))
+                self.cur.execute('select id from HashTag where tag=%s', [tag_text])
+                res = self.cur.fetchone()
+                if res: #exists
+                    hashtag_id = res[0]
+                else:#does not exist
+                    self.cur.execute("INSERT INTO HashTag (tag) VALUES(%s)" , [ tag_text ])
+                    hashtag_id = self.cur.lastrowid
+
+
             except:
                 print("Unexpected error:", sys.exc_info()[0])
                 print(twitter_data)
 
 
 
-            hashtag_id = self.cur.lastrowid
+
             try:
                 self.cur.execute("INSERT INTO HashTagTweet (hashtag_id, tweet_id) VALUES (%s, %s)",
                                  (hashtag_id, tweet_id)
@@ -122,6 +144,7 @@ class DB:
             except:
                 print("Unexpected error:", sys.exc_info()[0])
                 print(twitter_data)
+
 
 
         self.db.commit()

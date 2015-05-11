@@ -24,7 +24,7 @@ created_at TIMESTAMP DEFAULT 0
 
 CREATE TABLE HashTag (
 id SERIAL,
-tag VARCHAR(160)
+tag VARCHAR(160) UNIQUE
 );
 
 CREATE TABLE HashTagTweet(

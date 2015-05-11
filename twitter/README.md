@@ -25,8 +25,9 @@ ACCESS_TOKEN_SECRET=<access token secret><br/>
 <br/>
 oauth_signature_method="HMAC-SHA1"
  
- 
- <li>run python3 get_data.py</li>
+ <li>pip install -r /path/to/requirements.txt</li>
+ <li>pip install --allow-external mysql-connector-python mysql-connector-python</li>
+ <li>python3 get_data.py</li>
 </ol>
 
 
