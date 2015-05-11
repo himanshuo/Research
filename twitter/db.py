@@ -4,6 +4,9 @@ from constants import DB_NAME, DB_HOST, DB_USER, DB_PASSWD
 import pprint
 import sys
 import string
+import datetime
+import pytz
+
 class DB:
     def __init__(self):
         try:
@@ -15,6 +18,14 @@ class DB:
             # TABLES:   Tweet, HashTag, HashTagTweet, User
         except:
             print('could not connect to db')
+
+    def twitter_to_mysql_timestamp(self,twitter_time):
+        if (not (twitter_time is None)) and (not (twitter_time == "")):
+            tweet_date = datetime.datetime.strptime(twitter_time,'%a %b %d %H:%M:%S +0000 %Y').replace(tzinfo=pytz.UTC)
+        else:
+            tweet_date = None
+        return tweet_date
+
 
     def ascii_string(self, s):
         return ''.join(filter(lambda x: x in string.printable, s))
@@ -34,6 +45,8 @@ class DB:
                              created_at
                              ) VALUES (%s, %s, %s, %s, %s, %s, %s )
                              """
+
+
         try:
             self.cur.execute(user_insert_query,
                              (
@@ -43,7 +56,7 @@ class DB:
                                 user.get('listed_count',None),
                                 user.get('favourites_count',None),
                                 user.get('statuses_count',None),
-                                user.get('created_at',None),
+                                self.twitter_to_mysql_timestamp(user.get('created_at',None)),
 
                             )
             )
@@ -78,7 +91,7 @@ class DB:
                               self.ascii_string(str(twitter_data.get('place', None))),
                               twitter_data.get('retweet_count', None),
                               twitter_data.get('favorite_count', None),
-                              twitter_data.get('created_at', None),
+                              self.twitter_to_mysql_timestamp(twitter_data.get('created_at',None)),
                              )
             )
         except:
