@@ -49,7 +49,14 @@ TODO:
 5) store data in db or whatever store                                                                               DONE
     figure out what db we all want to store data in.
     figure out schema
-6) run periodically (cron job or continuously running python script? )                                              DONE
+6) run periodically (cron job or continuously running python script? )
+    almost done.
+    Need to find a way to run python script and have it continuously running.
+    screen
+        screen will start a new 'screen'
+        ctrl-A D will detach your 'screen'
+            can leave shell and log out of server.
+        screen -r will reatach to your 'screen'
 7) send email if there is an issue so we can figure out whats wrong.                                                DONE
 8) perhaps only get ascii values?
 9) https://dev.twitter.com/streaming/overview/messages-types#disconnect_messages
@@ -67,7 +74,13 @@ TODO:
     ---I am only asking for tweets that have been properly geotagged thus I am NOT getting all tweets.
     ---how many tweets am I getting in a normal say 5 sec time period???
             800 in 30 sec -> 26/sec -> 2 million per day -> 200 million in 100 days.
-            26 / 5787 = .05% which is actually pretty good considering that the stat is for the world.
+            26 / 5787 = .05% which is actually pretty good considering that the stat is .1% for the world.
+
+    ON UVA SERVER
+    ---how many tweets am I getting in a normal say 5 sec time period???
+            640 in 30 sec -> 21/sec -> 1.8 million per day -> 180 million in 100 days.
+            21 / 5787 = .036% which is not so good considering that the stat is .1% for the world.
+
 
 
     MEANING we need to set up multiple get_data.py's.
