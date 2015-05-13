@@ -9,8 +9,8 @@ place VARCHAR(800),
 retweet_count INT,
 favorite_count INT,
 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-fulltext (text)
 );
+CREATE INDEX text_index ON Tweet (text) USING BTREE;
 
 CREATE TABLE User (
 id SERIAL,

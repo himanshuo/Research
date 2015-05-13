@@ -49,6 +49,10 @@ TODO:
 5) store data in db or whatever store                                                                               DONE
     figure out what db we all want to store data in.
     figure out schema
+    NOTE:
+    LIKE '%whatever%'
+        ...will not use an index, but the following will:
+    LIKE 'whatever%'
 6) run periodically (cron job or continuously running python script? )
     almost done.
     Need to find a way to run python script and have it continuously running.
@@ -85,3 +89,133 @@ TODO:
 
     MEANING we need to set up multiple get_data.py's.
 
+
+
+
+"""
+RETURNED DATA FROM twitter is in the form:
+{
+    "created_at": "Thu Apr 02 22:16:15 +0000 2015",
+    "id": 583754843887571000,
+    "id_str": "583754843887570945",
+    "text": "Wake up eat watermelon then go to basketball practice",
+    "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+    "truncated": false,
+    "in_reply_to_status_id": null,
+    "in_reply_to_status_id_str": null,
+    "in_reply_to_user_id": null,
+    "in_reply_to_user_id_str": null,
+    "in_reply_to_screen_name": null,
+    "user": {
+        "id": 2950893090,
+        "id_str": "2950893090",
+        "name": "Diego Coronado",
+        "screen_name": "D_Coronado5",
+        "location": "",
+        "url": null,
+        "description": "gabriela️ \njust trying to make it",
+        "protected": false,
+        "verified": false,
+        "followers_count": 99,
+        "friends_count": 89,
+        "listed_count": 0,
+        "favourites_count": 265,
+        "statuses_count": 235,
+        "created_at": "Mon Dec 29 21:10:03 +0000 2014",
+        "utc_offset": null,
+        "time_zone": null,
+        "geo_enabled": true,
+        "lang": "en",
+        "contributors_enabled": false,
+        "is_translator": false,
+        "profile_background_color": "C0DEED",
+        "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_tile": false,
+        "profile_link_color": "0084B4",
+        "profile_sidebar_border_color": "C0DEED",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "profile_text_color": "333333",
+        "profile_use_background_image": true,
+        "profile_image_url": "http://pbs.twimg.com/profile_images/567430130197229568/p_T9pyJF_normal.jpeg",
+        "profile_image_url_https": "https://pbs.twimg.com/profile_images/567430130197229568/p_T9pyJF_normal.jpeg",
+        "profile_banner_url": "https://pbs.twimg.com/profile_banners/2950893090/1419888436",
+        "default_profile": true,
+        "default_profile_image": false,
+        "following": null,
+        "follow_request_sent": null,
+        "notifications": null
+    },
+    "geo": null,
+    "coordinates": null,
+    "place": null,
+    "contributors": null,
+    "retweet_count": 0,
+    "favorite_count": 0,
+    "entities": {
+        'hashtags': [{'indices': [0, 11], 'text': 'internship'},
+                           {'indices': [12, 16], 'text': 'Job'},
+                           {'indices': [20, 34], 'text': 'RedwoodShores'},
+                           {'indices': [90, 95], 'text': 'Jobs'},
+                           {'indices': [96, 103], 'text': 'Hiring'}],
+        "trends": [],
+        "urls": [],
+        "user_mentions": [],
+        "symbols": []
+    },
+    "favorited": false,
+    "retweeted": false,
+    "possibly_sensitive": false,
+    "filter_level": "low",
+    "lang": "en",
+    "timestamp_ms": "1428012975080"
+}
+"""
+
+
+
+
+
+"""
+ERROR CODES THAT TWITTER SENDS:
+
+Code	Name	Description
+1	Shutdown	The feed was shutdown (possibly a machine restart)
+2	Duplicate stream	The same endpoint was connected too many times.
+3	Control request	Control streams was used to close a stream (applies to sitestreams).
+4	Stall	The client was reading too slowly and was disconnected by the server.
+5	Normal	The client appeared to have initiated a disconnect.
+6	Token revoked	An oauth token was revoked for a user (applies to site and userstreams).
+7	Admin logout	The same credentials were used to connect a new stream and the oldest was disconnected.
+8		Reserved for internal use. Will not be delivered to external clients.
+9	Max message limit	The stream connected with a negative count parameter and was disconnected after all backfill was delivered.
+10	Stream exception	An internal issue disconnected the stream.
+11	Broker stall	An internal issue disconnected the stream.
+12	Shed load	The host the stream was connected to became overloaded and streams were disconnected to balance load. Reconnect as usual.
+"""
+
+
+"""
+STALL WARNINGS ARE USEFUL. ENABLE THEM.
+
+Stall warnings (warning)
+When connected to a stream using the stall_warnings parameter, you may receive status notices indicating the current health of the connection. See the stall_warnings documentation for more information.
+
+{
+  "warning":{
+    "code":"FALLING_BEHIND",
+    "message":"Your connection is falling behind and messages are being queued for delivery to you. Your queue is now over 60% full. You will be disconnected when the queue is full.",
+    "percent_full": 60
+  }
+}
+Note that in the case of Site Streams warning messages apply to the entire stream and will not be wrapped with a for_user envelope.
+
+
+"""
+
+
+
+"""
+STATUS CODES TO CHECK FOR:
+https://dev.twitter.com/streaming/overview/connecting
+"""
