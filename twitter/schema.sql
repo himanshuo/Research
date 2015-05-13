@@ -9,6 +9,7 @@ place VARCHAR(800),
 retweet_count INT,
 favorite_count INT,
 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+fulltext (text)
 );
 
 CREATE TABLE User (
