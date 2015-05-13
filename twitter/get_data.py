@@ -166,7 +166,7 @@ RETURNED DATA FROM twitter is in the form:
         "screen_name": "D_Coronado5",
         "location": "",
         "url": null,
-        "description": "gabriela❤️ \njust trying to make it",
+        "description": "gabriela️ \njust trying to make it",
         "protected": false,
         "verified": false,
         "followers_count": 99,
