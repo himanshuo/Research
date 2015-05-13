@@ -61,6 +61,14 @@ TODO:
         ctrl-A D will detach your 'screen'
             can leave shell and log out of server.
         screen -r will reatach to your 'screen'
+
+
+        can get list of screens via:
+            screen -ls .
+        then delete desired one using:
+        screen -X -S [session # you want to kill] quit
+
+
 7) send email if there is an issue so we can figure out whats wrong.                                                DONE
 8) perhaps only get ascii values?
 9) https://dev.twitter.com/streaming/overview/messages-types#disconnect_messages
