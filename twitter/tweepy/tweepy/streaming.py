@@ -20,7 +20,7 @@ from tweepy.models import Status
 from tweepy.api import API
 from tweepy.error import TweepError
 
-from tweepy.utils import import_simplejson
+from tweepy.utils import import_simplejson, urlencode_noplus
 json = import_simplejson()
 
 STREAM_VERSION = '1.1'
@@ -79,10 +79,6 @@ class StreamListener(object):
         else:
             logging.error("Unknown message type: " + str(raw_data))
 
-    def keep_alive(self):
-        """Called when a keep-alive arrived"""
-        return
-
     def on_status(self, status):
         """Called when a new status arrives"""
         return
@@ -129,7 +125,7 @@ class StreamListener(object):
         https://dev.twitter.com/docs/streaming-apis/messages#Disconnect_messages_disconnect
         """
         return
-
+    
     def on_warning(self, notice):
         """Called when a disconnection warning message arrives"""
         return
@@ -154,7 +150,7 @@ class ReadBuffer(object):
         self._chunk_size = chunk_size
 
     def read_len(self, length):
-        while not self._stream.closed:
+        while True:
             if len(self._buffer) >= length:
                 return self._pop(length)
             read_len = max(self._chunk_size, length - len(self._buffer))
@@ -162,7 +158,7 @@ class ReadBuffer(object):
 
     def read_line(self, sep='\n'):
         start = 0
-        while not self._stream.closed:
+        while True:
             loc = self._buffer.find(sep, start)
             if loc >= 0:
                 return self._pop(loc + len(sep))
@@ -204,16 +200,12 @@ class Stream(object):
         self.verify = options.get("verify", True)
 
         self.api = API()
-        self.headers = options.get("headers") or {}
-        self.new_session()
+        self.session = requests.Session()
+        self.session.headers = options.get("headers") or {}
+        self.session.params = None
         self.body = None
         self.retry_time = self.retry_time_start
         self.snooze_time = self.snooze_time_step
-
-    def new_session(self):
-        self.session = requests.Session()
-        self.session.headers = self.headers
-        self.session.params = None
 
     def _run(self):
         # Authenticate
@@ -278,7 +270,7 @@ class Stream(object):
         if resp:
             resp.close()
 
-        self.new_session()
+        self.session = requests.Session()
 
         if exception:
             # call a handler first so that the exception can be logged.
@@ -292,12 +284,12 @@ class Stream(object):
     def _read_loop(self, resp):
         buf = ReadBuffer(resp.raw, self.chunk_size)
 
-        while self.running and not resp.raw.closed:
+        while self.running:
             length = 0
-            while not resp.raw.closed:
+            while True:
                 line = buf.read_line().strip()
                 if not line:
-                    self.listener.keep_alive()  # keep-alive new lines are expected
+                    pass  # keep-alive new lines are expected
                 elif line.isdigit():
                     length = int(line)
                     break
@@ -334,7 +326,7 @@ class Stream(object):
             #         self._data(next_status_obj.decode('utf-8'))
 
 
-        if resp.raw.closed:
+        if resp.raw._fp.isclosed():
             self.on_closed(resp)
 
     def _start(self, async):
@@ -405,42 +397,44 @@ class Stream(object):
 
     def filter(self, follow=None, track=None, async=False, locations=None,
                stall_warnings=False, languages=None, encoding='utf8'):
-        self.body = {}
+        self.session.params = {}
         self.session.headers['Content-type'] = "application/x-www-form-urlencoded"
         if self.running:
             raise TweepError('Stream object already connected!')
         self.url = '/%s/statuses/filter.json' % STREAM_VERSION
         if follow:
-            self.body['follow'] = u','.join(follow).encode(encoding)
+            self.session.params['follow'] = u','.join(follow).encode(encoding)
         if track:
-            self.body['track'] = u','.join(track).encode(encoding)
+            self.session.params['track'] = u','.join(track).encode(encoding)
         if locations and len(locations) > 0:
             if len(locations) % 4 != 0:
                 raise TweepError("Wrong number of locations points, "
                                  "it has to be a multiple of 4")
-            self.body['locations'] = u','.join(['%.4f' % l for l in locations])
+            self.session.params['locations'] = u','.join(['%.4f' % l for l in locations])
         if stall_warnings:
-            self.body['stall_warnings'] = stall_warnings
+            self.session.params['stall_warnings'] = stall_warnings
         if languages:
-            self.body['language'] = u','.join(map(str, languages))
+            self.session.params['language'] = u','.join(map(str, languages))
+        self.body = urlencode_noplus(self.session.params)
         self.session.params = {'delimited': 'length'}
         self.host = 'stream.twitter.com'
         self._start(async)
 
     def sitestream(self, follow, stall_warnings=False,
                    with_='user', replies=False, async=False):
-        self.body = {}
+        self.parameters = {}
         if self.running:
             raise TweepError('Stream object already connected!')
         self.url = '/%s/site.json' % STREAM_VERSION
-        self.body['follow'] = u','.join(map(six.text_type, follow))
-        self.body['delimited'] = 'length'
+        self.parameters['follow'] = u','.join(map(six.text_type, follow))
+        self.parameters['delimited'] = 'length'
         if stall_warnings:
-            self.body['stall_warnings'] = stall_warnings
+            self.parameters['stall_warnings'] = stall_warnings
         if with_:
-            self.body['with'] = with_
+            self.parameters['with'] = with_
         if replies:
-            self.body['replies'] = replies
+            self.parameters['replies'] = replies
+        self.body = urlencode_noplus(self.parameters)
         self._start(async)
 
     def disconnect(self):

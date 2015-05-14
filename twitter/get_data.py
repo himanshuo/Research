@@ -93,6 +93,13 @@ class DBListener(StreamListener):
                                content=email_message)
             return False
 
+    def on_exception(self, exception):
+        """Called when an unhandled exception occurs."""
+        message= str(exception)
+        message = message + "\n" + "The python script likely broke. Go check it out."
+        self.send_emails(title="EXCEPTION", content=message)
+        return
+
 
 
     def send_emails(self, title, content):
