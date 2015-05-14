@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function
 from constants import *
+#During setup, make sure to install CUSTOM version of Tweepy
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
