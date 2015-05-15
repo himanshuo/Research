@@ -1,11 +1,12 @@
 from __future__ import absolute_import, print_function
 from constants import *
-
+#During setup, make sure to install CUSTOM version of Tweepy
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
-
-
+from db import DB
+import time
+import sendgrid
 import json
 import pprint
 
@@ -26,102 +27,129 @@ class DBListener(StreamListener):
     """
 
 
+    def on_connect(self):
+        """Called once connected to streaming server.
+        This will be invoked once a successful response
+        is received from the server. Allows the listener
+        to perform some work prior to entering the read loop.
+        """
+
+        self.db = DB()
+
+        pass
+
+
+
     def on_data(self, data):
         data = json.loads(data)
-        pprint.pprint(data['text'])
+
+        if 'limit' in data and 'track' in data['limit']:
+            return True # ignore current, continue to next tweet.
+
+
+
+
+
+        # pprint.pprint(data['text'])
+        #print('.',end="", flush=True)
+
+
+        if 'delete' in data and data['delete']:
+            return True #ignore deleted tweets.
+
+        if 'text' in data:
+             self.db.add_twitter_data(twitter_data=data)
+
+
+
+
+        if 'warning' in data:
+            self.on_warning(data['warning'])
 
 
         return True
 
     def on_error(self, status_code):
-        if status_code == 420:
+
+        if status_code == 420: #Rate Limited (too many login attempts)
             #returning False in on_data disconnects the stream
+
+            self.send_emails(  title="BROKEN. STATUS CODE == 420",
+                               content="BROKEN. STATUS CODE == 420. Rate Limited (too many login attempts) ")
 
             return False
 
+
+        return False
+
+
+    def on_warning(self, warning):
+        if warning.get("percent_full", 0) > 80:
+            email_message = "percent_full exceeded 80% ( percent_full = %d ) so temporarily stopping stream." % warning.get("percent_full",0)
+            email_message += "\n"
+            email_message += warning.get('message','')
+
+            self.send_emails(  title=warning.get('code','WARNING'),
+                               content=email_message)
+            return False
+
+    def on_exception(self, exception):
+        """Called when an unhandled exception occurs."""
+        message= str(exception)
+        message = message + "\n" + "The python script likely broke. Go check it out."
+        self.send_emails(title="EXCEPTION", content=message)
+        return
+
+
+
+    def send_emails(self, title, content):
+
+        try:
+            sg_username = SG_USERNAME
+            sg_password = SG_PASS
+
+            sg = sendgrid.SendGridClient(sg_username, sg_password)
+            message = sendgrid.Mail()
+
+
+            message.set_from(FROM_EMAIL)
+            message.set_subject(title)
+            message.set_text(content)
+            for email in EMAIL_TO:
+                message.add_to(email)
+
+
+            sg.send(message)
+        except:
+            print("-----------------ERROR. EMAIL WAS NOT SENT------------------")
+            print(title)
+            print(content)
+
+
+
+
+
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
     l = DBListener()
+
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
+    try:
 
-    stream = Stream(auth, l)
-    stream.filter(languages=['en'], async=True, locations=US)
+        stream = Stream(auth, l)
+        stream.filter(languages=['en'], async=True, locations=US, stall_warnings=True)
+
+    except:
+        l.send_emails(title="Python Script Failed", content="Python Script Failed. Must Manually Restart Script.")
 
 
 
 
-"""
-RETURNED DATA FROM twitter is in the form:
-{
-    "created_at": "Thu Apr 02 22:16:15 +0000 2015",
-    "id": 583754843887571000,
-    "id_str": "583754843887570945",
-    "text": "Wake up eat watermelon then go to basketball practice",
-    "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
-    "truncated": false,
-    "in_reply_to_status_id": null,
-    "in_reply_to_status_id_str": null,
-    "in_reply_to_user_id": null,
-    "in_reply_to_user_id_str": null,
-    "in_reply_to_screen_name": null,
-    "user": {
-        "id": 2950893090,
-        "id_str": "2950893090",
-        "name": "Diego Coronado",
-        "screen_name": "D_Coronado5",
-        "location": "",
-        "url": null,
-        "description": "gabriela❤️ \njust trying to make it",
-        "protected": false,
-        "verified": false,
-        "followers_count": 99,
-        "friends_count": 89,
-        "listed_count": 0,
-        "favourites_count": 265,
-        "statuses_count": 235,
-        "created_at": "Mon Dec 29 21:10:03 +0000 2014",
-        "utc_offset": null,
-        "time_zone": null,
-        "geo_enabled": true,
-        "lang": "en",
-        "contributors_enabled": false,
-        "is_translator": false,
-        "profile_background_color": "C0DEED",
-        "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
-        "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
-        "profile_background_tile": false,
-        "profile_link_color": "0084B4",
-        "profile_sidebar_border_color": "C0DEED",
-        "profile_sidebar_fill_color": "DDEEF6",
-        "profile_text_color": "333333",
-        "profile_use_background_image": true,
-        "profile_image_url": "http://pbs.twimg.com/profile_images/567430130197229568/p_T9pyJF_normal.jpeg",
-        "profile_image_url_https": "https://pbs.twimg.com/profile_images/567430130197229568/p_T9pyJF_normal.jpeg",
-        "profile_banner_url": "https://pbs.twimg.com/profile_banners/2950893090/1419888436",
-        "default_profile": true,
-        "default_profile_image": false,
-        "following": null,
-        "follow_request_sent": null,
-        "notifications": null
-    },
-    "geo": null,
-    "coordinates": null,
-    "place": null,
-    "contributors": null,
-    "retweet_count": 0,
-    "favorite_count": 0,
-    "entities": {
-        "hashtags": [],
-        "trends": [],
-        "urls": [],
-        "user_mentions": [],
-        "symbols": []
-    },
-    "favorited": false,
-    "retweeted": false,
-    "possibly_sensitive": false,
-    "filter_level": "low",
-    "lang": "en",
-    "timestamp_ms": "1428012975080"
-}
-"""

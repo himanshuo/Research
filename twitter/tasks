@@ -1,6 +1,6 @@
 TODO:
 
-1) stream by location.
+1) stream by location.                                                                                              DONE
     figure out API
     Can just pass in 4 location points in a list.
         Twitter wants a comma seperated list of latlong points.
@@ -12,10 +12,248 @@ TODO:
         NORTHEAST US: ( -61, 49)
 
         THUS locations = [-124, 30, -61, 49]
-2) store data in db or whatever store
-3) run periodically (cron job or continuously running python script? )
-4) send email if there is an issue so we can figure out whats wrong.
-5) perhaps only get ascii values?
-6) https://dev.twitter.com/streaming/overview/messages-types#disconnect_messages
+
+        Perhaps specify for 50 different states. Just to get more datapoints.
+2) 50 different states. Make seperate accounts for each.
+3) figure out how to auto-restart script if something breaks it.                                                    DONE
+    plan is:
+        1) if twitter connection error (something for which twitter gives error code), then fix issue in code.
+            need to figure out a way to stop the streaming for a while and then restart it up again.
+                IDEAS:
+                    1) just have timer wait for a few min.
+           WAIT. I THINK that Streaming api already handles automatically sleeping and then restarting!
+           WHY? There are a bunch of "sleep" and "retry_time_start" in the streaming.py code
+        2) if python script crashes, then manually rerun it.
+            There is some very BIG problem that needs to be fixed.
+        3) email in BOTH cases.
+    MAYBE DONE. NEED TO CHECK.
+3) handle status_codes.                                                                                             DONE
+    only 200, 420, ... NOT very useful
+4) handle ERROR codes                                                                                               DONE
+    more useful. listed at bottom of get_data.py. how to access them?
+    error codes sent whenever the stream fails
+    USEFUL ERROR CODES:
+        1	Shutdown	The feed was shutdown (possibly a machine restart)     -> restart
+        2	Duplicate stream	The same endpoint was connected too many times.   -> stop
+        4	Stall	The client was reading too slowly and was disconnected by the server. -> restart
+        5	Normal	The client appeared to have initiated a disconnect.                   -> restart
+        7	Admin logout   same credentials used to connect to new stream and oldest disconnected.  -> restart
+        10	Stream exception	An internal issue disconnected the stream.   -> restart
+        11	Broker stall	An internal issue disconnected the stream.     -> restart
+        12	Shed load	The host the stream was connected to became overloaded. -> restart
+
+        THUS, just restart if error is thrown. If duplicate stream error, then just stop stream.
+            restart should be happening automatically. really need to check.
+                    and actually the 420 error code RATE LIMITING handles this already...
+
+5) store data in db or whatever store                                                                               DONE
+    figure out what db we all want to store data in.
+    figure out schema
+    NOTE:
+    LIKE '%whatever%'
+        ...will not use an index, but the following will:
+    LIKE 'whatever%'
+6) run periodically (cron job or continuously running python script? )
+    almost done.
+    Need to find a way to run python script and have it continuously running.
+    screen
+        *
+        https://superuser.com/questions/632205/continue-ssh-background-task-jobs-when-closing-ssh
+        run a process directly with screen you can use
+
+        screen -dmSL [session name] [commands]
+        -d starts a screen session and immediately detaches from it
+        -m forces creating a new screen session
+        -S lets you give the session a name
+        -L turns on logging to ~/screenlog.0
+        example:
+
+        screen -dmSL workstuff myscript.sh
+        You can then either:
+
+        resume later using screen -x workstuff
+
+        or
+
+        check the log file less -r ~/screenlog.0
+
+
+
+
+        **
+        screen will start a new 'screen'
+        ctrl-A D will detach your 'screen'
+            can leave shell and log out of server.
+        screen -r will reatach to your 'screen'
+
+
+
+        ***
+        can get list of screens via:
+            screen -ls .
+        then delete desired one using:
+        screen -X -S [session # you want to kill] quit
+
+
+
+
+
+
+7) send email if there is an issue so we can figure out whats wrong.                                                DONE
+8) perhaps only get ascii values?
+9) https://dev.twitter.com/streaming/overview/messages-types#disconnect_messages
     handle diff types of disconnect messages.
     other stuff on this page.
+10) enable stall warnings.                                                                                          DONE
+    These help tell you when to cut down connection due to potential future issues
+    1)figured out how to have tweepy use stall_warnings.
+11) figure out how much data is actually being sent to me.                                                          DONE
+    https://twittercommunity.com/t/is-there-a-limit-to-the-amount-of-data-the-streaming-api-will-send-out/8482/5
+    ---Twitter sends me MAX of ~1% of all data that it gets per twitter-second.
+        twitter gets 500 million per day -> 5787 per sec.
+    ---{'limit': {'track': 13}} reveals that I hit the max rate.
+          13 is the number of tweets that were NOT sent to me at that twitter-second.
+    ---I am only asking for tweets that have been properly geotagged thus I am NOT getting all tweets.
+    ---how many tweets am I getting in a normal say 5 sec time period???
+            800 in 30 sec -> 26/sec -> 2 million per day -> 200 million in 100 days.
+            26 / 5787 = .05% which is actually pretty good considering that the stat is .1% for the world.
+
+    ON UVA SERVER
+    ---how many tweets am I getting in a normal say 5 sec time period???
+            640 in 30 sec -> 21/sec -> 1.8 million per day -> 180 million in 100 days.
+            21 / 5787 = .036% which is not so good considering that the stat is .1% for the world.
+
+
+
+    MEANING we need to set up multiple get_data.py's.
+
+
+
+
+"""
+RETURNED DATA FROM twitter is in the form:
+{
+    "created_at": "Thu Apr 02 22:16:15 +0000 2015",
+    "id": 583754843887571000,
+    "id_str": "583754843887570945",
+    "text": "Wake up eat watermelon then go to basketball practice",
+    "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+    "truncated": false,
+    "in_reply_to_status_id": null,
+    "in_reply_to_status_id_str": null,
+    "in_reply_to_user_id": null,
+    "in_reply_to_user_id_str": null,
+    "in_reply_to_screen_name": null,
+    "user": {
+        "id": 2950893090,
+        "id_str": "2950893090",
+        "name": "Diego Coronado",
+        "screen_name": "D_Coronado5",
+        "location": "",
+        "url": null,
+        "description": "gabriela️ \njust trying to make it",
+        "protected": false,
+        "verified": false,
+        "followers_count": 99,
+        "friends_count": 89,
+        "listed_count": 0,
+        "favourites_count": 265,
+        "statuses_count": 235,
+        "created_at": "Mon Dec 29 21:10:03 +0000 2014",
+        "utc_offset": null,
+        "time_zone": null,
+        "geo_enabled": true,
+        "lang": "en",
+        "contributors_enabled": false,
+        "is_translator": false,
+        "profile_background_color": "C0DEED",
+        "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_tile": false,
+        "profile_link_color": "0084B4",
+        "profile_sidebar_border_color": "C0DEED",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "profile_text_color": "333333",
+        "profile_use_background_image": true,
+        "profile_image_url": "http://pbs.twimg.com/profile_images/567430130197229568/p_T9pyJF_normal.jpeg",
+        "profile_image_url_https": "https://pbs.twimg.com/profile_images/567430130197229568/p_T9pyJF_normal.jpeg",
+        "profile_banner_url": "https://pbs.twimg.com/profile_banners/2950893090/1419888436",
+        "default_profile": true,
+        "default_profile_image": false,
+        "following": null,
+        "follow_request_sent": null,
+        "notifications": null
+    },
+    "geo": null,
+    "coordinates": null,
+    "place": null,
+    "contributors": null,
+    "retweet_count": 0,
+    "favorite_count": 0,
+    "entities": {
+        'hashtags': [{'indices': [0, 11], 'text': 'internship'},
+                           {'indices': [12, 16], 'text': 'Job'},
+                           {'indices': [20, 34], 'text': 'RedwoodShores'},
+                           {'indices': [90, 95], 'text': 'Jobs'},
+                           {'indices': [96, 103], 'text': 'Hiring'}],
+        "trends": [],
+        "urls": [],
+        "user_mentions": [],
+        "symbols": []
+    },
+    "favorited": false,
+    "retweeted": false,
+    "possibly_sensitive": false,
+    "filter_level": "low",
+    "lang": "en",
+    "timestamp_ms": "1428012975080"
+}
+"""
+
+
+
+
+
+"""
+ERROR CODES THAT TWITTER SENDS:
+
+Code	Name	Description
+1	Shutdown	The feed was shutdown (possibly a machine restart)
+2	Duplicate stream	The same endpoint was connected too many times.
+3	Control request	Control streams was used to close a stream (applies to sitestreams).
+4	Stall	The client was reading too slowly and was disconnected by the server.
+5	Normal	The client appeared to have initiated a disconnect.
+6	Token revoked	An oauth token was revoked for a user (applies to site and userstreams).
+7	Admin logout	The same credentials were used to connect a new stream and the oldest was disconnected.
+8		Reserved for internal use. Will not be delivered to external clients.
+9	Max message limit	The stream connected with a negative count parameter and was disconnected after all backfill was delivered.
+10	Stream exception	An internal issue disconnected the stream.
+11	Broker stall	An internal issue disconnected the stream.
+12	Shed load	The host the stream was connected to became overloaded and streams were disconnected to balance load. Reconnect as usual.
+"""
+
+
+"""
+STALL WARNINGS ARE USEFUL. ENABLE THEM.
+
+Stall warnings (warning)
+When connected to a stream using the stall_warnings parameter, you may receive status notices indicating the current health of the connection. See the stall_warnings documentation for more information.
+
+{
+  "warning":{
+    "code":"FALLING_BEHIND",
+    "message":"Your connection is falling behind and messages are being queued for delivery to you. Your queue is now over 60% full. You will be disconnected when the queue is full.",
+    "percent_full": 60
+  }
+}
+Note that in the case of Site Streams warning messages apply to the entire stream and will not be wrapped with a for_user envelope.
+
+
+"""
+
+
+
+"""
+STATUS CODES TO CHECK FOR:
+https://dev.twitter.com/streaming/overview/connecting
+"""
