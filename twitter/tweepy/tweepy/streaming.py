@@ -215,6 +215,7 @@ class Stream(object):
         error_counter = 0
         resp = None
         exception = None
+
         while self.running:
             if self.retry_count is not None:
                 if error_counter > self.retry_count:
@@ -330,6 +331,7 @@ class Stream(object):
             self.on_closed(resp)
 
     def _start(self, async):
+
         self.running = True
         if async:
             self._thread = Thread(target=self._run)
@@ -398,6 +400,7 @@ class Stream(object):
     def filter(self, follow=None, track=None, async=False, locations=None,
                stall_warnings=False, languages=None, encoding='utf8'):
         self.session.params = {}
+
         self.session.headers['Content-type'] = "application/x-www-form-urlencoded"
         if self.running:
             raise TweepError('Stream object already connected!')

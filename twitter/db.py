@@ -1,26 +1,27 @@
 #!/usr/bin/python
-import mysql.connector
-from constants import DB_NAME, DB_HOST, DB_USER, DB_PASSWD
+
+from models import engine, User, Tweet, Hashtag
 import pprint
 import sys
 import string
 import datetime
 import pytz
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, scoped_session
+# create a configured "Session" class
+Session = scoped_session(sessionmaker(bind=engine))
 
 class DB:
     def __init__(self):
         try:
 
-            config = {
-              'user': DB_USER,
-              'password': DB_PASSWD,
-              'host': DB_HOST,
-              'database': DB_NAME,
-            }
 
-            self.db = mysql.connector.connect(**config)
-            self.cur = self.db.cursor()
-            # TABLES:   Tweet, HashTag, HashTagTweet, User
+
+            # create a Session
+            self.session = Session()
+
+
+
         except:
             print('could not connect to db')
 
@@ -39,150 +40,110 @@ class DB:
 
     def add_twitter_data(self, twitter_data):
 
-        user = twitter_data.get('user')
-        user_insert_query = """
-                             INSERT INTO User (
-                             name,
-                             followers_count,
-                             friends_count,
-                             listed_count,
-                             favorites_count,
-                             statuses_count,
-                             created_at
-                             ) VALUES (%s, %s, %s, %s, %s, %s, %s )
-                             """
+
+        remote_user = twitter_data.get('user')
+        try:
+            user = self.session.query(User).filter(User.id == remote_user.get('id_str')).one()
+        except:
+
+            user = User(
+                id = remote_user.get('id_str'),
+                name=self.ascii_string( remote_user.get('name', None)),
+                screen_name=remote_user.get('screen_name', None),
+                followers=remote_user.get('followers_count', None),
+                friends=remote_user.get('friends_count', None),
+                favorites=remote_user.get('favourites_count',None),
+                statuses=remote_user.get('statuses_count',None),
+                created_at = self.twitter_to_mysql_timestamp(remote_user.get('created_at',None)),
+            )
 
 
         try:
-            self.cur.execute(user_insert_query,
-                             (
-                                self.ascii_string( user.get('name', None) ),
-                                user.get('followers_count',None),
-                                user.get('friends_count',None),
-                                user.get('listed_count',None),
-                                user.get('favourites_count',None),
-                                user.get('statuses_count',None),
-                                self.twitter_to_mysql_timestamp(user.get('created_at',None)),
-
-                            )
-            )
+            self.session.query(Tweet).filter(Tweet.id == twitter_data.get('id',None)).one()
+            #if we are able to query than tweet already exists. ignore this tweet.
+            return
         except:
-            print("Unexpected error:", sys.exc_info()[0])
-            print(twitter_data)
+            #else continue normally.
+            pass
+
+        tweet = Tweet(
+            id = self.ascii_string(twitter_data.get('id_str',None)),
+            created_at = self.twitter_to_mysql_timestamp(twitter_data.get('created_at',None)),
+            text = self.ascii_string( twitter_data.get('text') ),
+
+
+            geo = self.ascii_string(str(twitter_data.get('geo', None))),
+            coordinates = self.ascii_string(str(twitter_data.get('coordinates', None))),
+            place =  self.ascii_string(str(twitter_data.get('place', None))),
+
+            retweet_count = twitter_data.get('retweet_count', None),
+            favorite_count = twitter_data.get('favorite_count', None),
+        )
+        user.tweets.append(tweet)
 
 
 
 
-        user_id = self.cur.lastrowid
-        tweet_insert_query = """
-                            INSERT INTO Tweet (
-                             text,
-                             source,
-                             user_id,
-                             geo,
-                             coordinates,
-                             place,
-                             retweet_count,
-                             favorite_count,
-                             timestamp
-                             ) VALUES(%s, %s, %s, %s,%s, %s, %s, %s, %s)
-                            """
+        remote_tags = twitter_data.get('entities').get('hashtags')
 
-        try:
-            self.cur.execute(tweet_insert_query,
-                             ( self.ascii_string( twitter_data.get('text') ),
-                              self.ascii_string( twitter_data.get('source',None) ),
-                              twitter_data.get(user_id),
-                              self.ascii_string(str(twitter_data.get('geo', None))),
-                              self.ascii_string(str(twitter_data.get('coordinates', None))),
-                              self.ascii_string(str(twitter_data.get('place', None))),
-                              twitter_data.get('retweet_count', None),
-                              twitter_data.get('favorite_count', None),
-                              self.twitter_to_mysql_timestamp(twitter_data.get('created_at',None)),
-                             )
-            )
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
-            print(twitter_data)
-
-
-
-
-        tweet_id = self.cur.lastrowid
-            
-        tags = twitter_data.get('entities').get('hashtags')
-
-        for t in tags:
+        for t in remote_tags:
             try:
-
-                #determine if tag already exists in db.
-                # if so,
-                #   then hashtag_id = previoustag.id
-                #   else create new tag; hashtag_id = newtag.id
 
                 tag_text = self.ascii_string(t.get('text',''))
-                self.cur.execute('select id from HashTag where tag=%s', [tag_text])
-                res = self.cur.fetchone()
-                if res: #exists
-                    hashtag_id = res[0]
-                else:#does not exist
-                    self.cur.execute("INSERT INTO HashTag (tag) VALUES(%s)" , [ tag_text ])
-                    hashtag_id = self.cur.lastrowid
+                try:
+                    db_tag = self.session.query(Hashtag).fileter(Hashtag.text == tag_text).one()
+                except:
+                    db_tag = Hashtag(
+                        text=tag_text
+                    )
 
+                tweet.hashtags.append(db_tag)
 
             except:
                 print("Unexpected error:", sys.exc_info()[0])
                 print(twitter_data)
 
 
-
-
-            try:
-                self.cur.execute("INSERT INTO HashTagTweet (hashtag_id, tweet_id) VALUES (%s, %s)",
-                                 (hashtag_id, tweet_id)
-                )
-            except:
-                print("Unexpected error:", sys.exc_info()[0])
-                print(twitter_data)
-
-
-
-        self.db.commit()
+        self.session.add(user)
+        self.session.commit()
 
     def get_tweet(self, text, user_id):
         #todo: this method should allow you to put in a bunch of
         #todo: random params and get the appropriately matching tweets.
-        self.cur.execute("SELECT * FROM Tweet where text=%s", [text])
+        # self.cur.execute("SELECT * FROM Tweet where text=%s", [text])
+        pass
 
     def get_tweets(self, num=None):
-        #todo: make smarter. allow for getting user, and hashtags.
-        query = "SELECT * FROM Tweet"
-        if num:
-            query + " LIMIT " + str(num)
-        self.cur.execute(query)
-        return self.cur.fetchall()
+        # #todo: make smarter. allow for getting user, and hashtags.
+        # query = "SELECT * FROM Tweet"
+        # if num:
+        #     query + " LIMIT " + str(num)
+        # self.cur.execute(query)
+        # return self.cur.fetchall()
+        pass
 
     def print_tweets(self, num=None):
-        tweets = self.get_tweets(num)
-        pprint.pprint(tweets)
+        # tweets = self.get_tweets(num)
+        # pprint.pprint(tweets)
+        pass
 
     def print_schema(self):
-        print("-----------------Tweet-----------------")
-        self.cur.execute("DESCRIBE Tweet")
-        pprint.pprint(self.cur.fetchall())
-
-        print("-----------------User-----------------")
-        self.cur.execute("DESCRIBE User")
-        pprint.pprint(self.cur.fetchall())
-
-        print("-----------------HashTag-----------------")
-        self.cur.execute("DESCRIBE HashTag")
-        pprint.pprint(self.cur.fetchall())
-
-        print("-----------------HashTagTweet-----------------")
-        self.cur.execute("DESCRIBE HashTagTweet")
-        pprint.pprint(self.cur.fetchall())
-
+        # print("-----------------Tweet-----------------")
+        # self.cur.execute("DESCRIBE Tweet")
+        # pprint.pprint(self.cur.fetchall())
+        #
+        # print("-----------------User-----------------")
+        # self.cur.execute("DESCRIBE User")
+        # pprint.pprint(self.cur.fetchall())
+        #
+        # print("-----------------HashTag-----------------")
+        # self.cur.execute("DESCRIBE HashTag")
+        # pprint.pprint(self.cur.fetchall())
+        #
+        # print("-----------------HashTagTweet-----------------")
+        # self.cur.execute("DESCRIBE HashTagTweet")
+        # pprint.pprint(self.cur.fetchall())
+        pass
 
 
 

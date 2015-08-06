@@ -13,7 +13,7 @@ timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 CREATE INDEX text_index ON Tweet (text) USING BTREE;
 
 CREATE TABLE User (
-id SERIAL,
+id INT NOT NULL UNIQUE,
 name VARCHAR(160),
 followers_count INT,
 friends_count INT,

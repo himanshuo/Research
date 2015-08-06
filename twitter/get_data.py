@@ -6,7 +6,7 @@ from tweepy import OAuthHandler
 from tweepy import Stream
 from db import DB
 import time
-import sendgrid
+import requests
 import json
 import pprint
 
@@ -113,21 +113,22 @@ class DBListener(StreamListener):
     def send_emails(self, title, content):
 
         try:
-            sg_username = SG_USERNAME
-            sg_password = SG_PASS
-
-            sg = sendgrid.SendGridClient(sg_username, sg_password)
-            message = sendgrid.Mail()
-
-
-            message.set_from(FROM_EMAIL)
-            message.set_subject(title)
-            message.set_text(content)
-            for email in EMAIL_TO:
-                message.add_to(email)
-
-
-            sg.send(message)
+            # sg_username = SG_USERNAME
+            # sg_password = SG_PASS
+            #
+            # sg = sendgrid.SendGridClient(sg_username, sg_password)
+            # message = sendgrid.Mail()
+            #
+            #
+            # message.set_from(FROM_EMAIL)
+            # message.set_subject(title)
+            # message.set_text(content)
+            # for email in EMAIL_TO:
+            #     message.add_to(email)
+            #
+            #
+            # sg.send(message)
+            pass
         except:
             print("-----------------ERROR. EMAIL WAS NOT SENT------------------")
             print(title)
@@ -150,14 +151,19 @@ if __name__ == '__main__':
 
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
-    try:
+    while True:
+        try:
 
-        stream = Stream(auth, l)
-        stream.filter(languages=['en'], async=True, locations=US, stall_warnings=True)
+            stream = Stream(auth, l)
+            stream.filter(languages=['en'], async=False, locations=US, stall_warnings=True)
 
-    except:
-        l.send_emails(title="Python Script Failed", content="Python Script Failed. Must Manually Restart Script.")
-
+        except requests.packages.urllib3.exceptions.ProtocolError as e:
+            print(e)
+        except Exception as e:
+            # l.send_emails(title="Python Script Failed", content="Python Script Failed. Must Manually Restart Script.")
+            print(e)
+            print('BROKEN. SO SLEEPING for 5 min...')
+            time.sleep(60*5)
 
 
 
