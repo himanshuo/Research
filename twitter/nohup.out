@@ -1,0 +1,12 @@
+  File "get_data.py", line 169
+SyntaxError: Non-ASCII character '\xe2' in file get_data.py on line 170, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details
+Exception in thread Thread-1:
+Traceback (most recent call last):
+  File "/usr/lib/python3.4/threading.py", line 920, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.4/threading.py", line 868, in run
+    self._target(*self._args, **self._kwargs)
+  File "/net/if15/ho2es/Research/twitter/ENV/lib/python3.4/site-packages/tweepy/streaming.py", line 286, in _run
+    raise
+RuntimeError: No active exception to reraise
+

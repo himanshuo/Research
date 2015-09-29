@@ -147,17 +147,15 @@ class DBListener(StreamListener):
 
 if __name__ == '__main__':
     l = DBListener()
-
+    import time
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
-    try:
+    while True:
+        try:
 
-        stream = Stream(auth, l)
-        stream.filter(languages=['en'], async=True, locations=US, stall_warnings=True)
+            stream = Stream(auth, l)
+            stream.filter(languages=['en'], async=True, locations=US, stall_warnings=True)
 
-    except:
-        l.send_emails(title="Python Script Failed", content="Python Script Failed. Must Manually Restart Script.")
-
-
-
-
+        except:
+            l.send_emails(title="Python Script Failed", content="Python Script Failed. Must Manually Restart Script.")
+            time.sleep(60*10)
