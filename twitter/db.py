@@ -146,6 +146,18 @@ class DB:
         pass
 
 
+    def tweets(self, detail=False):
+        """
+        generator that returns tweets one by one
+        :return:
+        """
+        to_get = Tweet if detail else Tweet.text
+        for tweet in self.session.query(to_get):
+            yield tweet[0]
+
+        # for tweet in ["hi my name-is himanshu"]:
+        #     yield tweet
+
 
 if __name__=="__main__":
     db = DB()
