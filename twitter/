@@ -105,8 +105,8 @@ mydb = DB()
 # Examples:
 
 # mysql
-a = mydb.get_mysql_data('select * from Tweet limit 10')
-print(a)
+mydb.get_mysql_data('select * from tweet limit 10')
+
 # sqlite
 
 #num_tweets = len(mydb.session.query(Tweet).all())
