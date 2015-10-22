@@ -90,6 +90,11 @@ class NGram(object):
     """
 
     def get_synonym_list(self, word):
+        """
+        NEED TO LOOK AT POS (part of speech) tagging. this is in nltk.
+        :param word:
+        :return:
+        """
         synomyns = {}
         ssets = wn.synsets(word)
         for sset in ssets:
@@ -102,7 +107,7 @@ class NGram(object):
         """
 
         :param db: general connection to database. REQUIRES db.tweets() to give you a iterable of tweets as text.
-        :return:
+        :output: puts {word: num_occurences_of_word} into self.tokens
         """
         num_errors = 0
         limit = 100
@@ -126,8 +131,19 @@ class NGram(object):
                     pprint(self.tokens)
                     break
 
-        # pprint(self.tokens)
 
+    def print_m_most_common_words(self, m):
+        sorted_list = sorted(self.tokens.items(), key=lambda x: x[1])
+
+        for k,v in reversed(sorted_list):
+            print(k,v)
+            m -= 1
+            if m<=0:
+                break
+
+
+    def num_unique_words(self):
+        return len(self.tokens)
 
     def num_abbreviations(self, db):
         REGEX = r"[a-zA-Z](\.[a-zA-Z])+(\.){0,1}"
@@ -135,7 +151,7 @@ class NGram(object):
 
         num_matches = 0
         num_errors = 0
-        num_tweets = 0;
+        num_tweets = 0
         for tweet in db.tweets():
             try:
                 res = pattern.search(tweet.split('http')[0])
