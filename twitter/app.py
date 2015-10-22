@@ -81,10 +81,24 @@ mydb = DB()
 #    The models (classes) are:
 #       Tweet, User, and HashTag
 #   their fields are nearly identical to the tables in the mysql schema
-#   given above.
+#   given above. The full models can be found in the models.py file.
+#
+#   Some examples of ways to get data out of the sqlite database:
+#           1) get all tweets:
+#               mydb.session.query(Tweet).all()
+#           2) get only 100 Tweets:
+#               mydb.session.query(Tweet).limit(100).all()
+#           3) get tweets that have over 90 retweets
+#               mydb.session.query(Tweet).filter(Tweet.retweet_count > 90).all()
+#           4) get only the text contents of tweets
+#               mydb.session.query(Tweet.text).all()
+#           5) get all users
+#               mydb.session.query(User).all()
+#           6) get all tweets that have a given user name
+#               mydb.session.query(Tweet).filter(Tweet.user.name == given_user_name).all()
 #
 #
-
+#
 # Examples:
 
 # mysql
