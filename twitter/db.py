@@ -180,7 +180,7 @@ if __name__=="__main__":
             "screen_name": "D_Coronado5",
             "location": "",
             "url": None,
-            "description": "gabriela❤️ \njust trying to make it",
+            "description": "gabrielanjust trying to make it",
             "protected": False,
             "verified": False,
             "followers_count": 99,
