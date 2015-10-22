@@ -11,6 +11,9 @@ mydb = DB()
 # ngrams.get_synonym_list('take')
 # ngrams.num_abbreviations(mydb)
 
+
+# ngrams.num_abbreviations(mydb)
+
 # cd ~/ho2es/Research/twitter/
 # source ENV/bin/activate
 
@@ -107,3 +110,4 @@ mydb = DB()
 # sqlite
 
 # mydb.session.query(Tweet).all()
+

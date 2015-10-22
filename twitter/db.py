@@ -231,6 +231,83 @@ class DB:
 
 
 if __name__=="__main__":
+<<<<<<< HEAD
+    db = DB()
+    tweet = {
+        "created_at": "Thu Apr 02 22:16:15 +0000 2015",
+        "id": 583754843887571000,
+        "id_str": "583754843887570945",
+        "text": "Wake up eat watermelon then go to basketball practice",
+        "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+        "truncated": False,
+        "in_reply_to_status_id": None,
+        "in_reply_to_status_id_str": None,
+        "in_reply_to_user_id": None,
+        "in_reply_to_user_id_str": None,
+        "in_reply_to_screen_name": None,
+        "user": {
+            "id": 2950893090,
+            "id_str": "2950893090",
+            "name": "Diego Coronado",
+            "screen_name": "D_Coronado5",
+            "location": "",
+            "url": None,
+            "description": "gabrielanjust trying to make it",
+            "protected": False,
+            "verified": False,
+            "followers_count": 99,
+            "friends_count": 89,
+            "listed_count": 0,
+            "favourites_count": 265,
+            "statuses_count": 235,
+            "created_at": "Mon Dec 29 21:10:03 +0000 2014",
+            "utc_offset": None,
+            "time_zone": None,
+            "geo_enabled": True,
+            "lang": "en",
+            "contributors_enabled": False,
+            "is_translator": False,
+            "profile_background_color": "C0DEED",
+            "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+            "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+            "profile_background_tile": False,
+            "profile_link_color": "0084B4",
+            "profile_sidebar_border_color": "C0DEED",
+            "profile_sidebar_fill_color": "DDEEF6",
+            "profile_text_color": "333333",
+            "profile_use_background_image": True,
+            "profile_image_url": "http://pbs.twimg.com/profile_images/567430130197229568/p_T9pyJF_normal.jpeg",
+            "profile_image_url_https": "https://pbs.twimg.com/profile_images/567430130197229568/p_T9pyJF_normal.jpeg",
+            "profile_banner_url": "https://pbs.twimg.com/profile_banners/2950893090/1419888436",
+            "default_profile": True,
+            "default_profile_image": False,
+            "following": None,
+            "follow_request_sent": None,
+            "notifications": None
+        },
+        "geo": None,
+        "coordinates": None,
+        "place": None,
+        "contributors": None,
+        "retweet_count": 0,
+        "favorite_count": 0,
+        "entities": {
+            "hashtags": [],
+            "trends": [],
+            "urls": [],
+            "user_mentions": [],
+            "symbols": []
+        },
+        "favorited": False,
+        "retweeted": False,
+        "possibly_sensitive": False,
+        "filter_level": "low",
+        "lang": "en",
+        "timestamp_ms": "1428012975080"
+    }
+    db.add_twitter_data(tweet)
+    db.print_tweets()
+=======
     pass
     # db = DB()
     # tweet = {
@@ -307,6 +384,7 @@ if __name__=="__main__":
     # }
     # db.add_twitter_data(tweet)
     # db.print_tweets()
+>>>>>>> f669544741e4ea4ec32e09b25f6ffcdf395e4fdb
     
     
 
