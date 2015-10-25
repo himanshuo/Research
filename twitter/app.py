@@ -1,6 +1,7 @@
 from ngram import NGram
 from db import DB
 from models import User, Tweet, Hashtag
+from flask import Flask
 
 # ngrams = NGram()
 mydb = DB()
@@ -111,3 +112,7 @@ print(a)
 
 #num_tweets = len(mydb.session.query(Tweet).all())
 #print(num_tweets)
+
+
+
+
