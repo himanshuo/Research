@@ -82,8 +82,8 @@ class DBListener(StreamListener):
         if status_code == 420: #Rate Limited (too many login attempts)
             #returning False in on_data disconnects the stream
 
-            self.send_emails(  title="BROKEN. STATUS CODE == 420",
-                               content="BROKEN. STATUS CODE == 420. Rate Limited (too many login attempts) ")
+            #self.send_emails(  title="BROKEN. STATUS CODE == 420",
+            #                   content="BROKEN. STATUS CODE == 420. Rate Limited (too many login attempts) ")
 
             return False
 
@@ -97,8 +97,8 @@ class DBListener(StreamListener):
             email_message += "\n"
             email_message += warning.get('message','')
 
-            self.send_emails(  title=warning.get('code','WARNING'),
-                               content=email_message)
+            # self.send_emails(  title=warning.get('code','WARNING'),
+            #                   content=email_message)
             return False
 
     def on_exception(self, exception):
@@ -155,7 +155,7 @@ if __name__ == '__main__':
         try:
 
             stream = Stream(auth, l)
-            stream.filter(languages=['en'], async=False, locations=US, stall_warnings=True)
+            stream.filter(languages=['en'], track=['trump'], async=True, locations=US, stall_warnings=True)
 
         except requests.packages.urllib3.exceptions.ProtocolError as e:
             print(e)
@@ -164,6 +164,3 @@ if __name__ == '__main__':
             print(e)
             print('BROKEN. SO SLEEPING for 5 min...')
             time.sleep(60*5)
-
-
-
