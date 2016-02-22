@@ -1,0 +1,192 @@
+#     while True:
+#         # determine which tags to look for. tags that havent already been checked, order by decreaseing number of references to them
+#         active_tags = cursor.execute("SELECT * from Hashtag where checked == 0 ORDER BY ref DESC limit 1")
+#
+#         for tag in [x for x in active_tags if x]:
+#             # scrape every 5 seconds
+#             time.sleep(5)
+#
+#
+#             # get new hashtag to scrape
+#
+#             # build hashtag in proper format
+#             hashtag = "#" + str(tag[1])
+#             # mark checked
+#             cursor.execute("UPDATE Hashtag SET checked = 1 WHERE hashtag==\"" + tag[1] +"\"")
+#             conn.commit()
+#
+#
+#             #  scrape data
+#             tweets = []
+#             try:
+#                 tso = TwitterSearchOrder()
+#                 tso.set_keywords([hashtag]) # AND matching for keywords in list
+#                 tso.set_language('en')
+#                 tso.set_include_entities(False)
+#                 branching_tags = {}
+#                 ts = keys[0]
+#                 tweets = ts.search_tweets_iterable(tso)
+#             except Exception as e:
+#                 # print(e)
+#                 # print "ooops out of requests, pausing for 1 minute"
+#                 # print "switching keys"
+#                 # move key[0] to end
+#                 keys = keys[1:] + [keys[0]]
+#                 # if fail, then say that we havent checked
+#                 cursor.execute("UPDATE Hashtag SET checked = 0 WHERE hashtag==\"" + tag[1] +"\"")
+#                 conn.commit()
+#                 time.sleep(10)
+#
+#
+#             # process scrape data
+#             for tweet in tweets:
+#                 if tweet['retweet_count'] > retweet_count_threshold:
+#
+#                     # contains retweeted_status
+#                     retweeted_status = False
+#                     try:
+#                         c = tweet['retweeted_status']
+#                         retweeted_status = True
+#                     except:
+#                         retweeted_status = False
+#
+#                     if retweeted_status:
+#                         # if already exists in database with exact same text, then dont use it
+#                         counting = 0
+#                         for i in cursor.execute("select * from Tweet where text == ?",(tweet['retweeted_status']['text'],)):
+#                             counting += 1
+#                         if counting == 0 and tweet['retweeted_status']['user']['followers_count'] > follower_count_threshold:
+#
+#                             #
+#                             try:
+#                                 # throws out bad characters. if conversion fails, we ignore entire tweet
+#                                 text = str(tweet['retweeted_status']['text'])
+#
+#                                 # get content of tweet
+#                                 tokens = tokenizer.tokenize(text)
+#                                 new_tokens = get_content_words(tokens)
+#                                 # more filtering to tweet based on contents of tweet
+#                                 if len(new_tokens) > content_threshold:
+#
+#                                     # IF YOU ARE THIS FAR, tweet is good.
+#
+#                                     # get database stuff
+#                                     username_name = str(tweet['retweeted_status']['user']['screen_name'])
+#                                     username_id = str(tweet['retweeted_status']['user']['id'])
+#                                     username_followers = str(tweet['retweeted_status']['user']['followers_count'])
+#                                     tweet_text = str(tweet['retweeted_status']['text'])
+#                                     tweet_retweets = str(tweet['retweeted_status']['retweet_count'])
+#                                     tweet_favorites = str(tweet['retweeted_status']['favorite_count'])
+#                                     tweet_twitterid = str(tweet['retweeted_status']['id'])
+#
+#                                     # num times user has been seen.
+#                                     count = 1
+#                                     for i in cursor.execute("SELECT * from Username WHERE userid==" + str(username_id) + ";"):
+#                                         count += i[4]
+#
+#                                     if count == 1:
+#                                         # add user if doesnt already exist
+#                                         cursor.execute("INSERT INTO Username Values(" + username_id + "," + username_followers + ",\"" + username_name + "\",0,1);")
+#                                         conn.commit()
+#                                     else:
+#                                         # update that we saw this user once more
+#                                         cursor.execute("UPDATE Username SET ref = " + str(count) + " WHERE userid==" + str(username_id) + ";")
+#                                         conn.commit()
+#
+#                                     # add tweet into db
+#                                     cursor.execute("INSERT INTO Tweet (username,text,retweet_count,favorite_count,twitterID) Values(" + username_id + ",?," + tweet_retweets + "," + tweet_favorites + "," + tweet_twitterid + ")",(tweet_text,))
+#                                     conn.commit()
+#
+#                                     # list of hashtags in tweet
+#                                     # branching_tags: {hashtags: ref}
+#                                     # if exists in branching tags, then increment counter, else add to branching tags with ref=1
+#                                     scraped = tags_from_txt(tweet['retweeted_status']['text'])
+#                                     for item in scraped:
+#                                         try:
+#                                             branching_tags[item.lower()] += 1
+#                                         except:
+#                                             branching_tags[item.lower()] = 1
+#                             except:
+#                                 print ""
+#
+#             add_new_tags_to_db(branching_tags,conn,cursor)
+#
+#         # SAME PROCESS but with username and users history
+#         # todo: cut off user history by some feature (1 month, num tweets)
+#         active_users = cursor.execute("SELECT * from Username WHERE checked == 0 limit 1")
+#         for user in active_users:
+#             user = str(user[2])
+#             cursor.execute("UPDATE Username SET checked = 1 WHERE username==\"" + user + "\"")
+#             conn.commit()
+#             tweets = []
+#             try:
+#                 tuo = TwitterUserOrder(user)
+#                 # todo: search_tweets_iterable gets all historical tweets of user in chunks. Perhaps stop getting more chunks if x condition
+#                 tweets = ts.search_tweets_iterable(tuo)
+#             except Exception as e:
+#                 print(e)
+#                 print "ooops out of requests, pausing for 1 minute"
+#                 print "switching keys"
+#                 keys = keys[1:] + [keys[0]]
+#                 cursor.execute("UPDATE Username SET checked = 0 WHERE username==\"" + user +"\"")
+#                 conn.commit()
+#                 time.sleep(10)
+#             branching_tags = {}
+#             for tweet in tweets:
+#                 if tweet['retweet_count'] > retweet_count_threshold:
+#                     retweeted_status = False
+#                     try:
+#                         c = tweet['retweeted_status']
+#                         retweeted_status = True
+#                     except:
+#                         retweeted_status = False
+#                     if retweeted_status:
+#                         counting = 0
+#                         for i in cursor.execute("select * from Tweet where text == ?",(tweet['retweeted_status']['text'],)):
+#                             counting += 1
+#                         if tweet['retweeted_status']['user']['followers_count'] > follower_count_threshold and counting == 0:
+#                             try:
+#                                 text = str(tweet['retweeted_status']['text'])
+#                                 tokens = tokenizer.tokenize(text)
+#                                 hashtag = False
+#                                 hashtag2 = False
+#                                 new_tokens = []
+#                                 for token in tokens:
+#                                     if token == "@" or token == "#":
+#                                         hashtag = True
+#                                     elif token == "https" or token == "http" or token == "..http" or token == "..https":
+#                                         hashtag2 = True
+#                                     elif hashtag2 == True:
+#                                         hashtag2 = False
+#                                         hashtag = True
+#                                     elif hashtag:
+#                                         hashtag = False
+#                                     else:
+#                                         if token.lower() not in stopwords and token not in punctuations:
+#                                             new_tokens.append(token.lower())
+#                                 if len(new_tokens) > content_threshold:
+#                                     username_name = str(tweet['retweeted_status']['user']['screen_name'])
+#                                     username_id = str(tweet['retweeted_status']['user']['id'])
+#                                     username_followers = str(tweet['retweeted_status']['user']['followers_count'])
+#                                     tweet_text = str(tweet['retweeted_status']['text'])
+#                                     tweet_retweets = str(tweet['retweeted_status']['retweet_count'])
+#                                     tweet_favorites = str(tweet['retweeted_status']['favorite_count'])
+#                                     tweet_twitterid = str(tweet['retweeted_status']['id'])
+#                                     count = 0
+#                                     for i in cursor.execute("SELECT * from Username WHERE userid==" + str(username_id) + ";"):
+#                                         count += 1
+#                                     if count == 0:
+#                                         cursor.execute("INSERT INTO Username Values(" + username_id + "," + username_followers + ",\"" + username_name + "\",0);")
+#                                         conn.commit()
+#                                     cursor.execute("INSERT INTO Tweet (username,text,retweet_count,favorite_count,twitterID) Values(" + username_id + ",?," + tweet_retweets + "," + tweet_favorites + "," + tweet_twitterid + ")",(tweet_text,))
+#                                     conn.commit()
+#                                     scraped = tags_from_txt(tweet['retweeted_status']['text'])
+#                                     for item in scraped:
+#                                         try:
+#                                             branching_tags[item.lower()] += 1
+#                                         except:
+#                                             branching_tags[item.lower()] = 1
+#                             except:
+#                                 print ""
+#             add_new_tags_to_db(branching_tags,conn,cursor)
+#         conn.commit()
