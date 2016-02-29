@@ -49,64 +49,64 @@ def add_new_tags_to_db(branching_tags):
         hashtag = hashtag.lower()
 
         num_seen = 0
-        for i in cursor.execute("SELECT * FROM Hashtag WHERE hashtag == ?",(item,)):
+        for i in cursor.execute("SELECT * FROM Hashtag WHERE hashtag = ?",(str(hashtag),)):
             num_seen += i[3]
 
         if num_seen == 0:
             # query = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES(?,0," + str(hashs[item]) + ")",(item,)
-            query = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES({},0,0)".format(hashtag)
+            query = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES(\"{}\",0,0)".format(hashtag)
         else:
             # query = "UPDATE Hashtag SET ref = " + str(counter + hashs[item]) + " WHERE hashtag==\"" + item + "\""
-            query = "UPDATE Hashtag SET ref = {} WHERE hashtag=={}".format(num_seen+ref, hashtag)
+            query = "UPDATE Hashtag SET ref = {} WHERE hashtag={}".format(num_seen+ref, hashtag)
 
 
         cursor.execute(query)
         conn.commit()
-
-# def get_content_words(tokens):
-#     """
-#         filtering of tweet words.
-#         Takes in a tweet and removes all 'bad' words
-#     """
-#     hashtag = False
-#     hashtag2 = False
-#     new_tokens = []
-#     for token in tokens:
-#         if token == "@" or token == "#":
-#             hashtag = True
-#         elif token == "https" or token == "http" or token == "..http" or token == "..https":
-#             hashtag2 = True
-#         elif hashtag2 == True:
-#             hashtag2 = False
-#             hashtag = True
-#         elif hashtag:
-#             hashtag = False
-#         else:
-#             if token.lower() not in stopwords and token not in punctuations:
-#                 new_tokens.append(token.lower()) # EVERYTHING IS LOWER CASE
-#     return new_tokens
 
 def get_content_words(tokens):
     """
         filtering of tweet words.
         Takes in a tweet and removes all 'bad' words
     """
-    invalid_words = ["https", "http", "..http", "..https"]
-    tokens = [token for token in tokens if token not in invalid_words]
-
-    hashtag_indicator = ["@", "#"]
-    is_hashtag = False
+    hashtag = False
+    hashtag2 = False
     new_tokens = []
-
     for token in tokens:
-        if token in hashtag_indicator:
-            is_hashtag = True
-        elif is_hashtag:
-            is_hashtag = False
+        if token == "@" or token == "#":
+            hashtag = True
+        elif token == "https" or token == "http" or token == "..http" or token == "..https":
+            hashtag2 = True
+        elif hashtag2 == True:
+            hashtag2 = False
+            hashtag = True
+        elif hashtag:
+            hashtag = False
         else:
             if token.lower() not in stopwords and token not in punctuations:
-                new_tokens += token # EVERYTHING IS LOWER CASE
+                new_tokens.append(token.lower()) # EVERYTHING IS LOWER CASE
     return new_tokens
+
+# def get_content_words(tokens):
+#     """
+#         filtering of tweet words.
+#         Takes in a tweet and removes all 'bad' words
+#     """
+#     invalid_words = ["https", "http", "..http", "..https"]
+#     tokens = [token for token in tokens if token not in invalid_words]
+#
+#     hashtag_indicator = ["@", "#"]
+#     is_hashtag = False
+#     new_tokens = []
+#
+#     for token in tokens:
+#         if token in hashtag_indicator:
+#             is_hashtag = True
+#         elif is_hashtag:
+#             is_hashtag = False
+#         else:
+#             if token.lower() not in stopwords and token not in punctuations:
+#                 new_tokens += token # EVERYTHING IS LOWER CASE
+#     return new_tokens
 
 def mark_tag_as_checked(hashtag):
     # mark checked
@@ -147,17 +147,18 @@ def meets_content_threshold(tweet):
 
 def filter_tweets(tweets):
     out = []
+
     for tweet in tweets:
         if tweet['retweet_count'] > retweet_count_threshold and \
             contains_key(tweet, 'retweeted_status') and \
             is_new_tweet(tweet) and \
             tweet['retweeted_status']['user']['followers_count'] > follower_count_threshold and \
             meets_content_threshold(tweet):
-                out += tweet
+                out.append(tweet)
     return out
 
 
-def upsert_user(username_id, username_followers):
+def upsert_user(username_id, username_name, username_followers):
     # todo: there is probably a sqlite upsert function
 
     # num times user has been seen.
@@ -183,7 +184,7 @@ def add_tweets_to_db(tweets):
         try:
             add_tweet_to_db(tweet)
         except:
-            print("failed to add ".format(str(tweet)))
+            print("failed to add: {}".format(str(tweet)))
 
 def create_branching_tags(tweet):
     # branching_tags: {hashtags: ref}
@@ -211,8 +212,9 @@ def add_tweet_to_db(tweet):
     tweet_retweets = str(tweet['retweeted_status']['retweet_count'])
     tweet_favorites = str(tweet['retweeted_status']['favorite_count'])
     tweet_twitterid = str(tweet['retweeted_status']['id'])
+
     #add associate user
-    upsert_user(username_id, username_followers)
+    upsert_user(username_id, username_name, username_followers)
     # add tweet into db
     cursor.execute("INSERT INTO Tweet (username,text,retweet_count,favorite_count,twitterID) Values(" + username_id + ",?," + tweet_retweets + "," + tweet_favorites + "," + tweet_twitterid + ")",(tweet_text,))
     conn.commit()
@@ -223,12 +225,13 @@ def add_tweet_to_db(tweet):
 
 
 def tag_query(active_tags):
+    global keys
     tweets = []
-    for tag in [x for x in active_tags if x]:
+    for tag in active_tags:
         # scrape every 5 seconds
         time.sleep(5)
         # build hashtag in proper format
-        hashtag = "#" + str(tag[1])
+        hashtag = "#" + str(tag)
 
 
         try:
@@ -265,9 +268,12 @@ def user_query(active_users):
 def scrape_by_tag():
     # determine which tags to look for. tags that havent already been checked, order by decreaseing number of references to them
     active_tags = cursor.execute("SELECT * from Hashtag where checked == 0 ORDER BY ref DESC limit 1")
-    tweets = tag_query(active_tags)
+    time.sleep(5)
+    active_tag_strings = [ str(tag[1]) for tag in active_tags]
+    tweets = tag_query(active_tag_strings)
     tweets = filter_tweets(tweets)
     add_tweets_to_db(tweets)
+
 
 
 def scrape_by_user():
@@ -279,7 +285,11 @@ def scrape_by_user():
 def init():
     for data in cursor.execute("SELECT count(*) FROM Hashtag"):
         if data[0] == 0: # no initial hashtags
-            
+            for hashtag in ["trump", "donuld","americanpolitics"]:
+                query = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES('{}',0,0)".format(hashtag)
+                cursor.execute(query)
+                conn.commit()
+
 
     # for data in cursor.execute("SELECT count(*) FROM User"):
     #     if data[0] == 0: # no initial hashtags
@@ -288,6 +298,6 @@ def init():
 # MAIN
 if __name__=="__main__":
     init()
-    # while True:
-    #     scrape_by_tag()
-    #     scrape_by_user()
+    while True:
+        scrape_by_tag()
+        scrape_by_user()

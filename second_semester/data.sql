@@ -1,3 +1,6 @@
+-- to set up database, use command:
+--                    sqlite3 second.db < data.sql
+
 CREATE TABLE Hashtag(
 ID INTEGER PRIMARY KEY AUTOINCREMENT,
 hashtag TEXT,
