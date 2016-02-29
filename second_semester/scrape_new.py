@@ -121,24 +121,25 @@ def contains_key(mydict, mykey):
     except:
         return False
 
-def is_new_tweet(tweet):
+def is_new_tweet(tweet_text):
     """
         returns True if db does not contain this tweet already
     """
     counting = 0
     # todo: turn this into a count query
     # todo: change counting to num_seen
-    for i in cursor.execute("select * from Tweet where text == ?",(tweet['retweeted_status']['text'],)):
+    for i in cursor.execute("select * from Tweet where text == ?",(tweet_text,)):
         counting += 1
     return counting == 0
 
 
 
 
-def meets_content_threshold(tweet):
+def meets_content_threshold(tweet_text_with_bad_chars):
+    print(tweet_text_with_bad_chars)
     # assures no bad characters here as well
     try:
-        text = str(tweet['retweeted_status']['text'])
+        text = str(tweet_text_with_bad_chars)
     except:
         return False
     tokens = tokenizer.tokenize(text)
@@ -146,16 +147,25 @@ def meets_content_threshold(tweet):
     return len(new_tokens) > content_threshold
 
 
-def filter_tweets(tweets):
+def filter_tweets(tweets, is_user):
     out = []
 
-    for tweet in tweets:
-        if tweet['retweet_count'] > retweet_count_threshold and \
-            contains_key(tweet, 'retweeted_status') and \
-            is_new_tweet(tweet) and \
-            tweet['retweeted_status']['user']['followers_count'] > follower_count_threshold and \
-            meets_content_threshold(tweet):
-                out.append(tweet)
+    if is_user:
+        for tweet in tweets:
+            if tweet['retweet_count'] > retweet_count_threshold and \
+                not contains_key(tweet, 'retweeted_status') and \
+                is_new_tweet(tweet['text']) and \
+                tweet['user']['followers_count'] > follower_count_threshold and \
+                meets_content_threshold(tweet['text']):
+                    out.append(tweet)
+    else:
+        for tweet in tweets:
+            if tweet['retweet_count'] > retweet_count_threshold and \
+                contains_key(tweet, 'retweeted_status') and \
+                is_new_tweet(tweet['retweeted_status']['text']) and \
+                tweet['retweeted_status']['user']['followers_count'] > follower_count_threshold and \
+                meets_content_threshold(tweet['retweeted_status']['text']):
+                    out.append(tweet)
     return out
 
 
@@ -292,17 +302,16 @@ def scrape_by_tag():
     active_tags = cursor.execute("SELECT * from Hashtag where checked == 0 ORDER BY ref DESC limit 1")
     active_tag_strings = [ str(tag[1]) for tag in active_tags]
     tweets = tag_query(active_tag_strings)
-    tweets = filter_tweets(tweets)
+    tweets = filter_tweets(tweets, False)
     add_tweets_to_db(tweets)
 
 
 
 def scrape_by_user():
     active_users = cursor.execute("SELECT * from Username WHERE checked == 0 limit 1")
-    import pdb;pdb.set_trace()
+    # import pdb;pdb.set_trace()
     tweets = user_query(active_users)
-
-    tweets = filter_tweets(tweets)
+    tweets = filter_tweets(tweets, True)
     add_tweets_to_db(tweets)
 
 def init():
