@@ -1,7 +1,7 @@
 {
-    u 'contributors': None,
-    u 'truncated': False,
-    u 'text': u 'RT @wef: What would the end of #Schengen cost #Europe? @GuntramWolff https://t.co/W4FmrbXUm8 #refugees https://t.co/gGkVfMcekw',
+    "contributors": "None",
+    "truncated": "False",
+    "text": "RT @wef: What would the end of #Schengen cost #Europe? @GuntramWolff https://t.co/W4FmrbXUm8 #refugees https://t.co/gGkVfMcekw",
     u 'is_quote_status': False,
     u 'in_reply_to_status_id': None,
     u 'id': 700565402762358784,
