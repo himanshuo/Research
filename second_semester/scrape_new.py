@@ -137,6 +137,7 @@ def is_new_tweet(tweet_text):
 
 def meets_content_threshold(tweet_text_with_bad_chars):
     print(tweet_text_with_bad_chars)
+    # fixme: for some reason, we are getting the same tweet constantly from db
     # assures no bad characters here as well
     try:
         text = str(tweet_text_with_bad_chars)
