@@ -306,11 +306,13 @@ def user_query(active_users):
             time.sleep(10)
     return tweets
 
+def is_query_empty(db_cursor):
+    return db_cursor.rowcount <= 0
 
 def scrape_by_tag():
     # determine which tags to look for. tags that havent already been checked, order by decreaseing number of references to them
     active_tags = cursor.execute("SELECT * from Hashtag where checked == 0 AND ref >= ? ORDER BY ref DESC limit 1", (hashtag_ref_threshold,))
-    print len(active_tags)
+    print is_query_empty(active_tags)
     active_tag_strings = [ str(tag[1]) for tag in active_tags]
     tweets = tag_query(active_tag_strings)
     tweets = filter_tweets(tweets, False)
@@ -320,7 +322,7 @@ def scrape_by_tag():
 
 def scrape_by_user():
     active_users = cursor.execute("SELECT * from Username WHERE checked == 0 AND ref >= ? ORDER BY ref DESC limit 1", (user_ref_threshold,))
-    print len(active_users)
+    print is_query_empty(active_tags)
     tweets = user_query(active_users)
     tweets = filter_tweets(tweets, True)
     add_tweets_to_db(tweets)
