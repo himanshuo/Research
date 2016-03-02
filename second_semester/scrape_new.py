@@ -249,6 +249,8 @@ def add_tweet_to_db(tweet):
     print(tweet_text)
 
 
+
+
 def tag_query(active_tags):
     global keys
     tweets = []

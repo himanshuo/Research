@@ -29,4 +29,13 @@ checked BOOLEAN,
 ref BIGINT);
 
 
+
+CREATE TABLE SpecialWord(
+  id INTEGER PRIMARY KEY,
+  word VARCHAR(30),
+  checked BOOLEAN,
+  ref BIGINT
+);
+
+
 -- ALTER TABLE Tweet ADD COLUMN created_at TEXT;
