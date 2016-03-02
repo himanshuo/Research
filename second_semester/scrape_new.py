@@ -114,6 +114,11 @@ def mark_tag_as_checked(hashtag):
     cursor.execute("UPDATE Hashtag SET checked = 1 WHERE hashtag==\"" + hashtag +"\"")
     conn.commit()
 
+def mark_user_as_checked(userid):
+    # mark checked
+    cursor.execute("UPDATE Username SET checked = 1 WHERE userid==?", (userid,))
+    conn.commit()
+
 def contains_key(mydict, mykey):
     try:
         mydict[mykey]
@@ -137,10 +142,11 @@ def is_new_tweet(tweet_text):
 
 def meets_content_threshold(tweet_text_with_bad_chars):
     print(tweet_text_with_bad_chars)
-    # fixme: for some reason, we are getting the same tweet constantly from db
+    # fixme: for some reason, we are getting the same tweet constantly from twitter
     # assures no bad characters here as well
     try:
         text = str(tweet_text_with_bad_chars)
+        print(text)
     except:
         return False
     tokens = tokenizer.tokenize(text)
@@ -284,13 +290,16 @@ def user_query(active_users):
     global keys
     tweets = []
     for user in active_users:
-        user = str(user[2])
+        user_name = str(user[2])
         try:
-            tuo = TwitterUserOrder(user)
+            tuo = TwitterUserOrder(user_name)
             tuo.set_since_id(get_two_week_old_tweet_id())
             # todo: search_tweets_iterable gets all historical tweets of user in chunks. Perhaps stop getting more chunks if x condition
             ts = keys[0]
             tweets = ts.search_tweets_iterable(tuo)
+
+            # mark user as checked
+            mark_user_as_checked(user[0])
         except Exception as e:
             # if fail, move key[0] to end and sleep to allow key to reset
             keys = keys[1:] + [keys[0]]
