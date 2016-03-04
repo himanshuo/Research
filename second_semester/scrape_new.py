@@ -44,24 +44,25 @@ def add_new_tags_to_db(branching_tags):
         if new tag, then add to db
         else modify db to reflect that this dict of hashtags has been seen more times
     """
-    print branching_tags
+    # print branching_tags
 
     for hashtag, ref in branching_tags.items():
         hashtag = hashtag.lower()
-
+        #import pdb;pdb.set_trace()
         num_seen = 0
         for i in cursor.execute("SELECT * FROM Hashtag WHERE hashtag = ?",(str(hashtag),)):
             num_seen += i[3]
 
+
         if num_seen == 0:
             # query = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES(?,0," + str(hashs[item]) + ")",(item,)
-            query = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES(\"{}\",0,0)".format(hashtag)
+            cursor.execute("INSERT INTO Hashtag (hashtag,checked,ref) VALUES(?,0,0)", (hashtag,))
+
         else:
             # query = "UPDATE Hashtag SET ref = " + str(counter + hashs[item]) + " WHERE hashtag==\"" + item + "\""
-            query = "UPDATE Hashtag SET ref = {} WHERE hashtag={}".format(num_seen+ref, hashtag)
+            # query = "UPDATE Hashtag SET ref = {} WHERE hashtag=\""+hashtag+"\"".format(num_seen+ref)
+            cursor.execute("UPDATE Hashtag SET ref = ? WHERE hashtag=?;", (num_seen+ref, hashtag))
 
-
-        cursor.execute(query)
         conn.commit()
 
 def get_content_words(tokens):
@@ -119,6 +120,11 @@ def mark_user_as_checked(userid):
     cursor.execute("UPDATE Username SET checked = 1 WHERE userid==?", (userid,))
     conn.commit()
 
+def mark_word_as_checked(word_id):
+    cursor.execute("UPDATE SpecialWord SET checked = 1 WHERE id==?", (word_id,))
+    conn.commit()
+
+
 def contains_key(mydict, mykey):
     try:
         mydict[mykey]
@@ -141,12 +147,12 @@ def is_new_tweet(tweet_text):
 
 
 def meets_content_threshold(tweet_text_with_bad_chars):
-    print(tweet_text_with_bad_chars)
+    # print(tweet_text_with_bad_chars)
     # fixme: for some reason, we are getting the same tweet constantly from twitter
     # assures no bad characters here as well
     try:
         text = str(tweet_text_with_bad_chars)
-        print(text)
+        # print(text)
     except:
         return False
     tokens = tokenizer.tokenize(text)
@@ -157,7 +163,7 @@ def add_special_words(tweet_text):
     tokens = tokenizer.tokenize(tweet_text)
     new_tokens = get_content_words(tokens)
     for token in new_tokens:
-        print(token)
+        # print(token)
         upsert_word(token)
 
 def upsert_word(word):
@@ -225,7 +231,7 @@ def add_tweets_to_db(tweets, from_user_query):
         # this will likely break for whatever reasons.
         # ignore tweets that break
         try:
-            # import pdb;pdb.set_trace()
+
             add_tweet_to_db(tweet, from_user_query)
         except:
             print("failed to add: {}".format(str(tweet)))
@@ -272,7 +278,8 @@ def add_tweet_to_db(tweet, from_user_query):
         created_at_datetime = datetime.datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
         tweet_created_at = (created_at_datetime-datetime.datetime(1970,1,1)).total_seconds()
 
-
+    import pdb;pdb.set_trace()
+    
     #add associate user
     upsert_user(username_id, username_name, username_followers)
     # add tweet into db
@@ -307,7 +314,7 @@ def tag_query(active_tags):
             ts = keys[0]
             tweets = ts.search_tweets_iterable(tso)
             # mark hashtag as checked
-            mark_tag_as_checked(hashtag)
+            mark_tag_as_checked(str(tag))
         except Exception as e:
             # if fail, move key[0] to end and sleep to allow key to reset
             print('switching keys')
@@ -356,7 +363,7 @@ def user_query(active_users):
 def scrape_by_tag():
     # determine which tags to look for. tags that havent already been checked, order by decreaseing number of references to them
 
-    active_tags = cursor.execute("SELECT * from Hashtag where checked == 0 AND ref >= 5 ORDER BY ref DESC limit 1") # todo: should use hashtag_ref_threshold
+    active_tags = cursor.execute("SELECT * from Hashtag where checked == 0 AND ref >= ? ORDER BY ref DESC limit 1", (hashtag_ref_threshold,)) # todo: should use hashtag_ref_threshold
     active_tag_strings = [ str(tag[1]) for tag in active_tags]
     if(len(active_tag_strings) == 0):
         return False
@@ -367,11 +374,11 @@ def scrape_by_tag():
 
 
 def scrape_by_user():
-    get_count_cursor = cursor.execute("SELECT count(*) from Username WHERE checked == 0 AND ref >= 5 ORDER BY ref DESC limit 1")
+    get_count_cursor = cursor.execute("SELECT count(*) from Username WHERE checked == 0 AND ref >= ? ORDER BY ref DESC limit 1", (user_ref_threshold,))
     for i in get_count_cursor:
         if i[0] == 0:
             return False
-    # import pdb;pdb.set_trace()
+
     active_users = cursor.execute("SELECT * from Username WHERE checked == 0 AND ref >= ? ORDER BY ref DESC limit 1", (user_ref_threshold,))
     tweets = user_query(active_users)
     tweets = filter_tweets(tweets, True)
@@ -381,6 +388,8 @@ def scrape_by_user():
 def init():
     for data in cursor.execute("SELECT count(*) FROM Hashtag"):
         if data[0] == 0: # no initial hashtags
+            print('REINITIALIZING DATABASE')
+            time.sleep(5)
             for hashtag in ["trump", "donald","americanpolitics"]:
                 query = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES('{}',0,10000)".format(hashtag)
                 cursor.execute(query)
@@ -390,16 +399,42 @@ def init():
     # for data in cursor.execute("SELECT count(*) FROM User"):
     #     if data[0] == 0: # no initial hashtags
 
-def word_query(word_cursor):
-    
+
+
+def word_query(words):
+    global keys
+
+    for word in words:
+        word_text = word[1]
+        try:
+            # get data from twitter using api
+            tso = TwitterSearchOrder()
+            tso.set_keywords([word_text]) # AND matching for keywords in list
+            tso.set_language('en')
+            tso.set_include_entities(False)
+            ts = keys[0]
+            tweets = ts.search_tweets_iterable(tso)
+            # mark hashtag as checked
+            mark_word_as_checked(word[0])
+            return tweets
+        except Exception as e:
+            # if fail, move key[0] to end and sleep to allow key to reset
+            print('switching keys')
+            keys = keys[1:] + [keys[0]]
+            time.sleep(10)
+            tweets = []
+
+    return []
+
 def scrape_by_word():
-    word_cursor = cursor.execute("SELECT * from SpecialWord WHERE checked == 0 AND ref >= 5 ORDER BY ref DESC limit 1")
+    word_cursor = cursor.execute("SELECT * from SpecialWord WHERE checked == 0 AND ref >= ? ORDER BY ref DESC limit 1", (word_ref_threshold,))
     words = word_cursor.fetchall()
+
     tweets = word_query(words)
-    tweets = filter_tweets(tweets, True)
+    tweets = filter_tweets(tweets, is_user=False)
     for tweet in tweets:
-        create_branching_tags(tweet)
-        add_tweets_to_db(tweets, from_user_query=True)
+        branching_tags = create_branching_tags(str(tweet['retweeted_status']['text']))
+        add_new_tags_to_db(branching_tags)
 
 
 # MAIN
@@ -407,8 +442,9 @@ if __name__=="__main__":
     init()
     while True:
 
-        if not scrape_by_tag() and not scrape_by_user():
+        if not scrape_by_tag() or not scrape_by_user():
         # if not scrape_by_user():
-            # scrape_by_word()
+
             print('scraping by wordish')
+            scrape_by_word()
             time.sleep(5)
