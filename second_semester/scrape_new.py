@@ -7,7 +7,6 @@ import operator
 import random
 import math
 import sys
-import functions
 from TwitterSearch import *
 from constants import *
 import datetime
@@ -22,6 +21,7 @@ def tags_from_txt(txt):
     """
     tweet text -> [hashtags in tweet]
     """
+    print('tags from text: {}', txt)
     try:
         txt = str(txt)
         hashs = []
@@ -45,7 +45,7 @@ def add_new_tags_to_db(branching_tags):
         else modify db to reflect that this dict of hashtags has been seen more times
     """
     # print branching_tags
-
+    print('add new tags to db')
     for hashtag, ref in branching_tags.items():
         hashtag = hashtag.lower()
         #import pdb;pdb.set_trace()
@@ -112,7 +112,7 @@ def get_content_words(tokens):
 
 def mark_tag_as_checked(hashtag):
     # mark checked
-    cursor.execute("UPDATE Hashtag SET checked = 1 WHERE hashtag==\"" + hashtag +"\"")
+    cursor.execute("UPDATE Hashtag SET checked = 1 WHERE hashtag==?;", (hashtag,))
     conn.commit()
 
 def mark_user_as_checked(userid):
@@ -171,12 +171,12 @@ def upsert_word(word):
 
     # num times user has been seen.
     count = 1
-    for i in cursor.execute("SELECT * from SpecialWord WHERE word==" + str(word) + ";"):
+    for i in cursor.execute("SELECT * from SpecialWord WHERE word=?", (word,)):
         count += i[3]
 
     if count == 1:
         # add word if doesnt already exist
-        cursor.execute("INSERT INTO SpecialWord(word,checked,ref) Values(\"" + word + "\",0,1);")
+        cursor.execute("INSERT INTO SpecialWord(word,checked,ref) Values(?,0,1);", (word,))
         conn.commit()
     else:
         # update that we saw this word once more
@@ -212,16 +212,19 @@ def upsert_user(username_id, username_name, username_followers):
 
     # num times user has been seen.
     count = 1
-    for i in cursor.execute("SELECT * from Username WHERE userid==" + str(username_id) + ";"):
+    for i in cursor.execute("SELECT * from Username WHERE userid==?", (username_id)):
         count += i[4]
 
     if count == 1:
         # add user if doesnt already exist
-        cursor.execute("INSERT INTO Username Values(" + username_id + "," + username_followers + ",\"" + username_name + "\",0,1);")
+        cursor.execute(
+        "INSERT INTO Username(follower_count, username, checked, ref) Values(?,?,?,?);",
+            (username_followers, username_name, 0, count)
+        )
         conn.commit()
     else:
         # update that we saw this user once more
-        cursor.execute("UPDATE Username SET ref = " + str(count) + " WHERE userid==" + str(username_id) + ";")
+        cursor.execute("UPDATE Username SET ref = ? WHERE userid==?;", (count, username_id))
         conn.commit()
 
 
@@ -254,36 +257,40 @@ def add_tweet_to_db(tweet, from_user_query):
     """
         adds tweets, associated users, associated hashtags to db
     """
+    print('adding tweet to db')
     # get database stuff
     if not from_user_query:
         username_name = str(tweet['retweeted_status']['user']['screen_name'])
-        username_id = str(tweet['retweeted_status']['user']['id'])
-        username_followers = str(tweet['retweeted_status']['user']['followers_count'])
+        username_id = int(tweet['retweeted_status']['user']['id'])
+        username_followers = int(tweet['retweeted_status']['user']['followers_count'])
         tweet_text = str(tweet['retweeted_status']['text'])
-        tweet_retweets = str(tweet['retweeted_status']['retweet_count'])
-        tweet_favorites = str(tweet['retweeted_status']['favorite_count'])
-        tweet_twitterid = str(tweet['retweeted_status']['id'])
+        tweet_retweets = int(tweet['retweeted_status']['retweet_count'])
+        tweet_favorites = int(tweet['retweeted_status']['favorite_count'])
+        tweet_twitterid = int(tweet['retweeted_status']['id'])
         # tweet_created_at = str(tweet['retweeted_status']['created_at'])
         created_at_datetime = datetime.datetime.strptime(tweet['retweeted_status']['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
         tweet_created_at = (created_at_datetime-datetime.datetime(1970,1,1)).total_seconds()
     else:
         username_name = str(tweet['user']['screen_name'])
-        username_id = str(tweet['user']['id'])
-        username_followers = str(tweet['user']['followers_count'])
+        username_id = int(tweet['user']['id'])
+        username_followers = int(tweet['user']['followers_count'])
         tweet_text = str(tweet['text'])
-        tweet_retweets = str(tweet['retweet_count'])
-        tweet_favorites = str(tweet['favorite_count'])
-        tweet_twitterid = str(tweet['id'])
+        tweet_retweets = int(tweet['retweet_count'])
+        tweet_favorites = int(tweet['favorite_count'])
+        tweet_twitterid = int(tweet['id'])
         # tweet_created_at = str(tweet['retweeted_status']['created_at'])
         created_at_datetime = datetime.datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
         tweet_created_at = (created_at_datetime-datetime.datetime(1970,1,1)).total_seconds()
 
     import pdb;pdb.set_trace()
-    
+
     #add associate user
     upsert_user(username_id, username_name, username_followers)
     # add tweet into db
-    cursor.execute("INSERT INTO Tweet (username,text,retweet_count,favorite_count,twitterID,created_at) Values(" + username_id + ",?," + tweet_retweets + "," + tweet_favorites + "," + tweet_twitterid +","+str(tweet_created_at)+")",(tweet_text,))
+    cursor.execute(
+        "INSERT INTO Tweet (username,text,retweet_count,favorite_count,twitterID,created_at) Values(?,?,?,?,?,?);",
+        (username_name, tweet_text,tweet_retweets, tweet_favorites, tweet_twitterid, tweet_created_at)
+    )
     conn.commit()
 
     # add hashtags to db
@@ -298,6 +305,7 @@ def add_tweet_to_db(tweet, from_user_query):
 
 
 def tag_query(active_tags):
+    print('tag query')
     global keys
     tweets = []
     for tag in active_tags:
@@ -362,11 +370,12 @@ def user_query(active_users):
 
 def scrape_by_tag():
     # determine which tags to look for. tags that havent already been checked, order by decreaseing number of references to them
-
+    print('scrape by tag')
     active_tags = cursor.execute("SELECT * from Hashtag where checked == 0 AND ref >= ? ORDER BY ref DESC limit 1", (hashtag_ref_threshold,)) # todo: should use hashtag_ref_threshold
     active_tag_strings = [ str(tag[1]) for tag in active_tags]
     if(len(active_tag_strings) == 0):
         return False
+    print('found {} tags to query for', len(active_tag_strings))
     tweets = tag_query(active_tag_strings)
     tweets = filter_tweets(tweets, False)
     add_tweets_to_db(tweets, from_user_query=False)
@@ -374,11 +383,12 @@ def scrape_by_tag():
 
 
 def scrape_by_user():
+    print('scrape by user')
     get_count_cursor = cursor.execute("SELECT count(*) from Username WHERE checked == 0 AND ref >= ? ORDER BY ref DESC limit 1", (user_ref_threshold,))
     for i in get_count_cursor:
         if i[0] == 0:
             return False
-
+    print('found users to ')
     active_users = cursor.execute("SELECT * from Username WHERE checked == 0 AND ref >= ? ORDER BY ref DESC limit 1", (user_ref_threshold,))
     tweets = user_query(active_users)
     tweets = filter_tweets(tweets, True)
@@ -391,21 +401,16 @@ def init():
             print('REINITIALIZING DATABASE')
             time.sleep(5)
             for hashtag in ["trump", "donald","americanpolitics"]:
-                query = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES('{}',0,10000)".format(hashtag)
-                cursor.execute(query)
+                cursor.execute("INSERT INTO Hashtag (hashtag,checked,ref) VALUES(?,0,10000)", (hashtag,))
                 conn.commit()
-
-
-    # for data in cursor.execute("SELECT count(*) FROM User"):
-    #     if data[0] == 0: # no initial hashtags
-
 
 
 def word_query(words):
     global keys
-
+    print('word query')
     for word in words:
         word_text = word[1]
+        print('querying for word {}', format(word_text))
         try:
             # get data from twitter using api
             tso = TwitterSearchOrder()
@@ -427,9 +432,10 @@ def word_query(words):
     return []
 
 def scrape_by_word():
+    print('scrape by word')
     word_cursor = cursor.execute("SELECT * from SpecialWord WHERE checked == 0 AND ref >= ? ORDER BY ref DESC limit 1", (word_ref_threshold,))
     words = word_cursor.fetchall()
-
+    print('found {} words to scrape'.format(len(words)))
     tweets = word_query(words)
     tweets = filter_tweets(tweets, is_user=False)
     for tweet in tweets:
@@ -444,7 +450,5 @@ if __name__=="__main__":
 
         if not scrape_by_tag() or not scrape_by_user():
         # if not scrape_by_user():
-
-            print('scraping by wordish')
             scrape_by_word()
             time.sleep(5)
