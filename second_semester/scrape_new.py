@@ -50,22 +50,22 @@ def add_new_tags_to_db(branching_tags):
         hashtag = hashtag.lower()
         num_seen = 0
         query_to_execute = "SELECT * FROM Hashtag WHERE hashtag = \"" + str(hashtag) + "\""
-        print "executing: " + query_to_execute
+        #print "executing: " + query_to_execute
         for i in cursor.execute(query_to_execute):
             num_seen += i[3]
 
 
         if num_seen == 0:
             # query = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES(?,0," + str(hashs[item]) + ")",(item,)
-            query_to_execute = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES(\"" + str(hashtag) + "\",0,0)"
-            print "executing: " + query_to_execute
+            query_to_execute = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES(\"" + str(hashtag) + "\",0," + str(ref) + ")"
+            #print "executing: " + query_to_execute
             cursor.execute(query_to_execute)
 
         else:
             # query = "UPDATE Hashtag SET ref = " + str(counter + hashs[item]) + " WHERE hashtag==\"" + item + "\""
             # query = "UPDATE Hashtag SET ref = {} WHERE hashtag=\""+hashtag+"\"".format(num_seen+ref)
             query_to_execute = "UPDATE Hashtag SET ref = " + str(num_seen + ref) + " WHERE hashtag=\"" + str(hashtag) + "\";"
-            print "executing: " + query_to_execute
+            #print "executing: " + query_to_execute
             cursor.execute(query_to_execute)
 
         conn.commit()
@@ -98,28 +98,28 @@ def mark_tag_as_checked(hashtag):
     print "running method mark_tag_as_checked"
     # mark checked
     query_to_execute = "UPDATE Hashtag SET checked = 1 WHERE hashtag==\"" + str(hashtag)+ "\";"
-    print "executing: " + query_to_execute
+    #print "executing: " + query_to_execute
     cursor.execute(query_to_execute)
     conn.commit()
 
 def mark_user_as_checked(userid):
-    print "running method mark_user_as_checked"
+    print "running method mark_user_as_checked: " + str(userid)
     # mark checked
     query_to_execute = "UPDATE Username SET checked = 1 WHERE userid==" + str(userid) + ";"
-    print "executing: " + query_to_execute
+    #print "executing: " + query_to_execute
     cursor.execute(query_to_execute)
     conn.commit()
 
 def mark_word_as_checked(word_id):
     print "running method mark_word_as_checked"
     query_to_execute = "UPDATE SpecialWord SET checked = 1 WHERE id==" + str(word_id)+ ";"
-    print "executing: " + query_to_execute
+    #print "executing: " + query_to_execute
     cursor.execute(query_to_execute)
     conn.commit()
 
 
 def contains_key(mydict, mykey):
-    print "running method contains_key"
+    #print "running method contains_key"
     try:
         mydict[mykey]
         return True
@@ -137,7 +137,7 @@ def is_new_tweet(tweet_text):
     # todo: change counting to num_seen
 
     query_to_execute = "select * from Tweet where text == \"" + str(tweet_text)+ "\""
-    print "executing: " + query_to_execute
+    #print "executing: " + query_to_execute
     for i in cursor.execute(query_to_execute):
         counting += 1
     return counting == 0
@@ -163,7 +163,6 @@ def add_special_words(tweet_text):
     tokens = tokenizer.tokenize(tweet_text)
     new_tokens = get_content_words(tokens)
     for token in new_tokens:
-        # print(token)
         upsert_word(token)
 
 def upsert_word(word):
@@ -173,23 +172,21 @@ def upsert_word(word):
     # num times user has been seen.
     count = 1
     query_to_execute = "SELECT * from SpecialWord WHERE word=\"" + str(word) + "\""
-    print "executing: " + query_to_execute
+    #print "executing: " + query_to_execute
     for i in cursor.execute(query_to_execute):
         count += i[3]
 
     if count == 1:
         # add word if doesnt already exist
-        print "word doesnt exist yet"
         query_to_execute = "INSERT INTO SpecialWord(word,checked,ref) Values(\"" + str(word) + "\",0,1);"
-        print "executing: " + query_to_execute
+        #print "executing: " + query_to_execute
         cursor.execute(query_to_execute)
         conn.commit()
     else:
         # update that we saw this word once more
         # cursor.execute("UPDATE SpecialWord SET ref = " + str(count) + " WHERE word==\"" + str(word) + "\";")
-        print "word exists alread"
         query_to_execute = "UPDATE SpecialWord SET ref = " + str(count) + " where word==\"" + str(word) + "\""
-        print "executing: " + query_to_execute
+        #print "executing: " + query_to_execute
         cursor.execute(query_to_execute)
         conn.commit()
 
@@ -224,28 +221,26 @@ def filter_tweets(tweets, is_user):
 
 
 def upsert_user(username_id, username_name, username_followers):
-    print "calling method upsert_user"
     # todo: there is probably a sqlite upsert function
 
     # num times user has been seen.
     count = 1
     query_to_execute ="SELECT * from Username WHERE userid==" + str(username_id) + ";"
-    print "executing: " + query_to_execute
+    #print "executing: " + query_to_execute
     for i in cursor.execute(query_to_execute):
         count += i[4]
 
     if count == 1:
         # add user if doesnt already exist
         print "user does not already exist"
-        query_to_execute = "INSERT INTO Username(follower_count, username, checked, ref) Values(" + str(username_followers) + ",\"" + str(username_name) + "\",0," + str(count) + ");"
-        print "executing: " + query_to_execute
+        query_to_execute = "INSERT INTO Username(userid, follower_count, username, checked, ref) Values(" + str(username_id) + "," + str(username_followers) + ",\"" + str(username_name) + "\",0,1);"
+        #print "executing: " + query_to_execute
         cursor.execute(query_to_execute)
         conn.commit()
     else:
         # update that we saw this user once more
-        print "user already exists"
         query_to_execute = "UPDATE Username SET ref = " + str(count) + " WHERE userid==" + str(username_id) + ";"
-        print "executing: " + query_to_execute
+        #print "executing: " + query_to_execute
         cursor.execute(query_to_execute)
         conn.commit()
 
@@ -317,7 +312,7 @@ def add_tweet_to_db(tweet, from_user_query):
     # add tweet into db
     query_to_execute = "INSERT INTO Tweet (username,text,retweet_count,favorite_count,twitterID,created_at) Values" \
         "(\"" + str(username_name) + "\",\"" + str(tweet_text) + "\"," + str(tweet_retweets) + "," + str(tweet_favorites) + "," + str(tweet_twitterid) + ",\"" + str(tweet_created_at) + "\");"
-    print "executing: " + query_to_execute
+    #print "executing: " + query_to_execute
     cursor.execute(query_to_execute)
     conn.commit()
 
@@ -357,31 +352,26 @@ def tag_query(active_tags):
             print('switching keys')
             keys = keys[1:] + [keys[0]]
             time.sleep(10)
-    print "returning from tag query"
     return tweets
 
 
 def get_two_week_old_tweet_id():
-    print "doing method: get_two_week_old_tweet_id()"
+    #print "doing method: get_two_week_old_tweet_id()"
     two_weeks_ago = (datetime.datetime.now() - datetime.timedelta(days=20))
     epoch = datetime.datetime.utcfromtimestamp(0)
     two_weeks_ago_seconds_since_epoch = (two_weeks_ago - epoch).total_seconds() * 1000.0
 
     try:
         query_to_execute = "SELECT twitterID,created_at from tweet WHERE created_at >= " + str(two_weeks_ago_seconds_since_epoch) + " order by created_at limit 1;"
-        print "executing: " + query_to_execute
+        #print "executing: " + query_to_execute
         for i in cursor.execute(query_to_execute):
-            print "found a tweet successfully"
-            print "exiting method"
             return i[0]
     except:
-        print "didnt find a tweet"
-        print "exiting method"
         return 0
 
 def user_query(active_users):
     global keys
-    print "doing method user_query"
+    #print "doing method user_query"
     tweets = []
     for user in active_users:
         user_name = str(user[2])
@@ -399,23 +389,19 @@ def user_query(active_users):
             print('switching keys')
             keys = keys[1:] + [keys[0]]
             time.sleep(10)
-    print "returned from user_query"
+    #print "returned from user_query"
     return tweets
-
-# def is_query_empty(db_cursor):
-#     print(db_cursor.rowcount)
-#     return db_cursor.rowcount <= 0
 
 def scrape_by_tag():
     # determine which tags to look for. tags that havent already been checked, order by decreaseing number of references to them
     print('scraping by tag')
     query_to_execute = "SELECT * from Hashtag where checked == 0 AND ref >= " + str(hashtag_ref_threshold) + " ORDER BY ref DESC limit 1;"
-    print "executing: " + query_to_execute
+    #print "executing: " + query_to_execute
     active_tags = cursor.execute(query_to_execute)
     active_tag_strings = [ str(tag[1]) for tag in active_tags]
     if(len(active_tag_strings) == 0):
         return False
-    print('found {} tags to query for', len(active_tag_strings))
+    #print('found {} tags to query for', len(active_tag_strings))
     tweets = tag_query(active_tag_strings)
     tweets = filter_tweets(tweets, False)
     add_tweets_to_db(tweets, from_user_query=False)
@@ -425,14 +411,13 @@ def scrape_by_tag():
 def scrape_by_user():
     print('scraping by user')
     query_to_execute = "SELECT count(*) from Username WHERE checked == 0 AND ref >= " + str(user_ref_threshold) + " ORDER BY ref DESC limit 1;"
-    print "executing: " + query_to_execute
+    #print "executing: " + query_to_execute
     get_count_cursor = cursor.execute(query_to_execute)
     for i in get_count_cursor:
         if i[0] == 0:
             return False
-    print('found users to ')
     query_to_execute = "SELECT * from Username WHERE checked == 0 AND ref >= " + str(user_ref_threshold) + " ORDER BY ref DESC limit 1;"
-    print "executing: " + query_to_execute
+    #print "executing: " + query_to_execute
     active_users = cursor.execute(query_to_execute)
     tweets = user_query(active_users)
     tweets = filter_tweets(tweets, True)
@@ -456,10 +441,10 @@ def init():
 
 def word_query(words):
     global keys
-    print "starting word queries"
+    #print "starting word queries"
     for word in words:
         word_text = word[1]
-        print('querying for word {}', format(word_text))
+        #print('querying for word {}', format(word_text))
         try:
             # get data from twitter using api
             tso = TwitterSearchOrder()
@@ -470,7 +455,7 @@ def word_query(words):
             tweets = ts.search_tweets_iterable(tso)
             # mark hashtag as checked
             mark_word_as_checked(word[0])
-            print "sucessefully returned from word_query"
+            #print "sucessefully returned from word_query"
             return tweets
         except Exception as e:
             # if fail, move key[0] to end and sleep to allow key to reset
@@ -482,10 +467,10 @@ def word_query(words):
 def scrape_by_word():
     print('scraping by word')
     query_to_execute = "SELECT * from SpecialWord WHERE checked == 0 AND ref >= " + str(word_ref_threshold) + " ORDER BY ref DESC limit 1;"
-    print "executing: " + query_to_execute
+    #print "executing: " + query_to_execute
     word_cursor = cursor.execute(query_to_execute)
     words = word_cursor.fetchall()
-    print('found {} words to scrape'.format(len(words)))
+    #print('found {} words to scrape'.format(len(words)))
     tweets = word_query(words)
     tweets = filter_tweets(tweets, is_user=False)
     for tweet in tweets:

@@ -7,8 +7,6 @@ import operator
 import random
 import math
 import sys
-import functions
-import unigrammodel
 from TwitterSearch import *
 import signal
 import subprocess
@@ -29,7 +27,7 @@ ts1 = TwitterSearch(
 stopwords = ['i','to','the','a','and','in','you','my','of','it','for','is','on','that','this','me']
 punctuations = ['``',':','!','.',',','&','(',')','*','^','%','$','#','@','~','""',';','<','>','/','?','...','-']
 
-conn2 = sqlite3.connect('new_tweets.db')
+conn2 = sqlite3.connect('second.db')
 c2 = conn2.cursor()
 
 last_tweets = 0

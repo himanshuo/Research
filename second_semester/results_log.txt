@@ -1,0 +1,32 @@
+UPDATE:
+2016-03-16 10:29
+
+Total Hashtags in DB: 0, 0 in the last 3 minutes
+Total Hashes checked: 0, 0 in the last 3 minutes
+Total Tweets in DB: 0, 0 in the last 3 minutes
+Total Users in DB: 0, 0 in the last 3 minutes
+Total Users Checked: 0, 0 in the last 3 minutes
+UPDATE:
+2016-03-16 10:30
+
+Total Hashtags in DB: 20, 20 in the last 3 minutes
+Total Hashes checked: 2, 2 in the last 3 minutes
+Total Tweets in DB: 21, 21 in the last 3 minutes
+Total Users in DB: 14, 14 in the last 3 minutes
+Total Users Checked: 0, 0 in the last 3 minutes
+UPDATE:
+2016-03-16 10:38
+
+Total Hashtags in DB: 24, 24 in the last 3 minutes
+Total Hashes checked: 3, 3 in the last 3 minutes
+Total Tweets in DB: 27, 27 in the last 3 minutes
+Total Users in DB: 16, 16 in the last 3 minutes
+Total Users Checked: 2, 2 in the last 3 minutes
+UPDATE:
+2016-03-16 10:41
+
+Total Hashtags in DB: 24, 0 in the last 3 minutes
+Total Hashes checked: 4, 1 in the last 3 minutes
+Total Tweets in DB: 27, 0 in the last 3 minutes
+Total Users in DB: 16, 0 in the last 3 minutes
+Total Users Checked: 2, 0 in the last 3 minutes
