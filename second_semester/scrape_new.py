@@ -71,7 +71,7 @@ def add_new_tags_to_db(branching_tags):
         conn.commit()
 
 def get_content_words(tokens):
-    print "running method get_content_words"
+    print("running method get_content_words")
     """
         filtering of tweet words.
         Takes in a tweet and removes all 'bad' words
@@ -95,7 +95,7 @@ def get_content_words(tokens):
     return new_tokens
 
 def mark_tag_as_checked(hashtag):
-    print "running method mark_tag_as_checked"
+    print("running method mark_tag_as_checked")
     # mark checked
     query_to_execute = "UPDATE Hashtag SET checked = 1 WHERE hashtag==\"" + str(hashtag)+ "\";"
     #print "executing: " + query_to_execute
@@ -103,7 +103,7 @@ def mark_tag_as_checked(hashtag):
     conn.commit()
 
 def mark_user_as_checked(userid):
-    print "running method mark_user_as_checked: " + str(userid)
+    print( "running method mark_user_as_checked: " + str(userid))
     # mark checked
     query_to_execute = "UPDATE Username SET checked = 1 WHERE userid==" + str(userid) + ";"
     #print "executing: " + query_to_execute
@@ -111,7 +111,7 @@ def mark_user_as_checked(userid):
     conn.commit()
 
 def mark_word_as_checked(word_id):
-    print "running method mark_word_as_checked"
+    print( "running method mark_word_as_checked")
     query_to_execute = "UPDATE SpecialWord SET checked = 1 WHERE id==" + str(word_id)+ ";"
     #print "executing: " + query_to_execute
     cursor.execute(query_to_execute)
@@ -131,7 +131,7 @@ def is_new_tweet(tweet_text):
     """
         returns True if db does not contain this tweet already
     """
-    print "running method is_new_tweet"
+    print( "running method is_new_tweet")
     counting = 0
     # todo: turn this into a count query
     # todo: change counting to num_seen
@@ -146,7 +146,7 @@ def is_new_tweet(tweet_text):
 
 
 def meets_content_threshold(tweet_text_with_bad_chars):
-    print "running method meets_content_threshold"
+    print( "running method meets_content_threshold")
     # print(tweet_text_with_bad_chars)
     # fixme: for some reason, we are getting the same tweet constantly from twitter
     # assures no bad characters here as well
@@ -166,7 +166,7 @@ def add_special_words(tweet_text):
         upsert_word(token)
 
 def upsert_word(word):
-    print "upserting: " + word
+    print( "upserting: " + word)
     # todo: there is probably a sqlite upsert function
 
     # num times user has been seen.
@@ -232,7 +232,7 @@ def upsert_user(username_id, username_name, username_followers):
 
     if count == 1:
         # add user if doesnt already exist
-        print "user does not already exist"
+        print( "user does not already exist")
         query_to_execute = "INSERT INTO Username(userid, follower_count, username, checked, ref) Values(" + str(username_id) + "," + str(username_followers) + ",\"" + str(username_name) + "\",0,1);"
         #print "executing: " + query_to_execute
         cursor.execute(query_to_execute)
@@ -246,7 +246,7 @@ def upsert_user(username_id, username_name, username_followers):
 
 
 def add_tweets_to_db(tweets, from_user_query):
-    print "called method add_tweets_to_db"
+    print( "called method add_tweets_to_db")
     for tweet in tweets:
         # add each tweet to db.
         # this will likely break for whatever reasons.
@@ -258,7 +258,7 @@ def add_tweets_to_db(tweets, from_user_query):
             print("failed to add: {}".format(str(tweet)))
 
 def create_branching_tags(tweet_text):
-    print "called method branching tags"
+    print( "called method branching tags")
     # branching_tags: {hashtags: ref}
     branching_tags = {}
 
@@ -283,9 +283,9 @@ def add_tweet_to_db(tweet, from_user_query):
         username_id = int(tweet['retweeted_status']['user']['id'])
         username_followers = int(tweet['retweeted_status']['user']['followers_count'])
         tweet_text = str(tweet['retweeted_status']['text'])
-        print tweet_text
+        print( tweet_text)
         tweet_text = tweet_text.replace("\"","'")
-        print tweet_text
+        print( tweet_text)
         tweet_retweets = int(tweet['retweeted_status']['retweet_count'])
         tweet_favorites = int(tweet['retweeted_status']['favorite_count'])
         tweet_twitterid = int(tweet['retweeted_status']['id'])
@@ -297,9 +297,9 @@ def add_tweet_to_db(tweet, from_user_query):
         username_id = int(tweet['user']['id'])
         username_followers = int(tweet['user']['followers_count'])
         tweet_text = str(tweet['text'])
-        print tweet_text
+        print( tweet_text)
         tweet_text = tweet_text.replace("\"","'")
-        print tweet_text
+        print( tweet_text)
         tweet_retweets = int(tweet['retweet_count'])
         tweet_favorites = int(tweet['favorite_count'])
         tweet_twitterid = int(tweet['id'])
@@ -322,7 +322,7 @@ def add_tweet_to_db(tweet, from_user_query):
 
     # add special words to db
     add_special_words(tweet_text)
-    print "done adding from "
+    print( "done adding from ")
     print(tweet_text)
 
 
@@ -425,18 +425,18 @@ def scrape_by_user():
     return True
 
 def init():
-    print "running init()"
+    print( "running init()")
     for data in cursor.execute("SELECT count(*) FROM Hashtag"):
         if data[0] == 0: # no initial hashtags
             print('REINITIALIZING DATABASE')
             time.sleep(5)
             for hashtag in seed_hashtags:
-                print "adding: #" + str(hashtag) + " into db"
+                print( "adding: #" + str(hashtag) + " into db")
                 query_to_execute = "INSERT INTO Hashtag (hashtag,checked,ref) VALUES(\"" + str(hashtag) + "\",0,10000);"
-                print "executing: " + query_to_execute
+                print( "executing: " + query_to_execute)
                 cursor.execute(query_to_execute)
                 conn.commit()
-    print "exited from init()"
+    print( "exited from init()")
 
 
 def word_query(words):
