@@ -65,6 +65,6 @@ __pycache__/
 
 
 ENV/
-
+second.db.another_backup
 
 *db
