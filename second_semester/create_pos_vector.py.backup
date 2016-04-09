@@ -1,0 +1,61 @@
+import traceback
+import sqlite3
+import nltk
+import os
+import json
+import time
+import operator
+import random
+import math
+import sys
+import unigrammodel
+from constant import *
+import time
+
+input_database = 'second.db'
+read_conn = sqlite3.connect(input_database)
+write_conn = sqlite3.connect(input_database)
+db_read = read_conn.cursor()
+db_write = write_conn.cursor()
+db_read.execute("delete from FullVector;")
+tokenizer = nltk.tokenize.treebank.TreebankWordTokenizer()
+tweets = db_read.execute("SELECT * from Tweet group by text limit 100")
+
+tweets_map = {}
+for item in tweets:
+    print item
+    tokens = tokenizer.tokenize(item[2])
+    hashtag = False
+    hashtag2 = False
+    new_tokens = []
+    for token in tokens:
+        if token == "@" or token == "#":
+            hashtag = True
+        elif token == "https" or token == "http":
+            hashtag2 = True
+        elif hashtag2 == True:
+            hashtag2 = False
+            hashtag = True
+        elif hashtag:
+            hashtag = False
+        else:
+            new_tokens.append(token.lower())
+    if len(new_tokens) > 10 and len(new_tokens) < 39:  # check to see why 8873 is never rwritten?
+        tweets_map[item[0]] = new_tokens
+
+start = time.time() # 134.500674009
+i = 0
+for x in tweets_map.keys():
+    print x
+    new_tokens = tweets_map[x]
+    tagged = nltk.pos_tag(new_tokens)
+    db_read.execute("insert into FullVector(tweet_id, full_vector) values (?, ?);", [x, str(tagged)])
+    if i % 10 == 0:
+        read_conn.commit()
+read_conn.commit()
+
+end = time.time()
+
+for item in db_read.execute("select * from FullVector limit 100"):
+    print(item)
+print("IT TOOK {} seconds".format(end-start))

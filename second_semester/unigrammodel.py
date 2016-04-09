@@ -33,6 +33,17 @@ class UnigramModel:
         for word in self.doc_freq:
             if self.doc_freq[word] > self.threshold:
                 self.idf[word] = 1.0 + math.log((num_docs + 0.0)/(self.doc_freq[word]))
+        self.dict_list = self.doc_freq.keys()
+
+    def get_vector_list(self,document):
+        vec = self.get_vector(document)
+        to_return = list(self.dict_list)
+        for x in range(0,len(to_return)):
+            try:
+                to_return[x] = vec[to_return[x]]
+            except:
+                to_return[x] = 0
+        return to_return
 
     def process_document(self,doc):
         good_tokens = []

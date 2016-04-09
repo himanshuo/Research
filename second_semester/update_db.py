@@ -9,6 +9,7 @@ import pytz
 import shlex
 from TwitterSearch import *
 from constants import *
+import re
 tokenizer = nltk.tokenize.TweetTokenizer()
 
 keys = [ts1,ts2,ts3,ts4,ts5,ts6,ts7,ts8,ts9,ts10]
@@ -24,13 +25,22 @@ db = mysql.connector.connect(**config)
 cur = db.cursor()
 update_cursor = db.cursor()
 
-def search_for_tweet_by_text(text):
+def get_words(text):
+    word_text = text.split(" ")
+    out = []
+    for word in word_text:
+        if( len(re.findall("\W", word)) == 0 ):
+            out.append(word)
+        if(len(out) >1):
+            return out
+
+    return out
+
+def search_for_tweet_by_text(text, timestamp):
     try:
-        word_text = text.split(" ")
-        # word_text = tokenizer.tokenize(text)
-        # word_text = list(filter(lambda x:len(x)>1 and '\'' not in x,word_text))
-        # word_text = word_text[0:2]
-    except:
+        word_text = get_words(text)
+    except Exception as e:
+        print(e)
         print("ERROR: could not be tokenize: " ,text )
         return []
 
@@ -39,24 +49,28 @@ def search_for_tweet_by_text(text):
     tso.set_keywords(word_text) # AND matching for keywords in list
     tso.set_language('en')
     tso.set_include_entities(False)
-    ts = keys[0]
+    tso.set_until(timestamp)
+    ts = keys[2]
     tweets = ts.search_tweets_iterable(tso)
     out = []
     for tweet in tweets:
-        out += tweet['text']
-        if len(out) > 1:
-            print('too many matches')
-            return []
+        print(tweet['text'])
+        out.append(tweet['text'])
+        print('just added to out', len(out))
+
+    if len(out) > 1:
+        print('too many matches')
+        return []
     if len(out) == 0:
         print('0 matches')
     return out
 
 # search_for_tweet_by_text('mcdonalds is awesome')
 
-cur.execute("SELECT id,text FROM Tweet limit 5")
-for (id, text) in cur:
-    print(id, ":",text)
-    remotes = search_for_tweet_by_text(text)
+cur.execute("SELECT id,text, timestamp FROM Tweet limit 5")
+for (id, text, timestamp) in cur:
+    print(id, "(",timestamp,") :",text)
+    remotes = search_for_tweet_by_text(text, timestamp)
     print(len(remotes))
 #     if len(remote)!=0:
 #         update_cursor.execute("update query")

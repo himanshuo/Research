@@ -37,5 +37,9 @@ CREATE TABLE SpecialWord(
   ref BIGINT
 );
 
+CREATE TABLE FullVector(
+  tweet_id INTEGER PRIMARY KEY,
+  full_vector TEXT
+);
 
 -- ALTER TABLE Tweet ADD COLUMN created_at TEXT;
