@@ -1,5 +1,6 @@
 import traceback
 import sqlite3
+import datetime
 import nltk
 import os
 import json
@@ -43,7 +44,7 @@ for item in us:
     users[item[2]] = item[1]
     all_users.append(item[2])
 all_users = set(all_users)
-tweets = c.execute("SELECT * from Tweet limit 100")
+tweets = c.execute("SELECT * from Tweet limit 1")
 i = 0
 for item in tweets:
     print item
@@ -133,20 +134,42 @@ def is_asking_retweet(tweet_tokens):
         if ".rt" in token or 'rt.' in token or ' rt' in token or 'rt' == token:
             return True
         return False
-def get_pos(tweet_tokens):
-    print "trying getpos"
-    try:
-        tokenized = tweet_tokens
-        out = []
-        tagged = nltk.pos_tag(out)
-        # chunkGram = r"""Chunk: {<RB.?>*<VB.?>*<NNP>}"""
-        # chunkParser = nltk.RegexpParser(chunkGram)
-        # chunked = chunkParser.parse(tagged)
-        print(tagged)
-        # print(chunked)
-        print "\n\n\n"
-    except Exception as e:
-        print(str(e))
+
+def get_pos(tweet_id):
+    print("getpos")
+    for v in c.execute("SELECT full_vector from FullVector where tweet_id = ? limit 1", (tweet_id,)):
+        return v[0].split(', ')
+
+def get_time_of_day_vect(tweet_id):
+    print('time of day')
+
+    for t in c.execute("select created_at from Tweet where tweetid = ? limit 1 ;", (tweet_id,)):
+        seconds_since_epoch = float(t[0])
+        d = datetime.datetime.fromtimestamp(int(seconds_since_epoch))
+        arr = [0,0,0,0,0,0] # [0-3, 4-7, 8-11, 12-15, 16-20, 21-24]
+        arr[int(d.hour/4)] = 1
+        print(d)
+        print(arr)
+        return arr
+
+def get_result_popularity(tweet_id_a, tweet_id_b):
+    retweet_count_a = 0
+    for r in c.execute("select retweet_count from Tweet where tweetid = ?", (tweet_id_a,)):
+        retweet_count_a = r[0]
+
+    retweet_count_b = 0
+    for r in c.execute("select retweet_count from Tweet where tweetid = ?", (tweet_id_b,)):
+        retweet_count_b = r[0]
+
+    print(retweet_count_a)
+    print(retweet_count_b)
+
+    if retweet_count_a > retweet_count_b:
+        print(1)
+        return 1
+    else:
+        print(0)
+        return 0
 
 def analyze(tweets):
     """
@@ -195,7 +218,21 @@ def analyze(tweets):
                     featureb = featureb + list(usersmap[tweets[j]])
                     featurea = featurea + [len(linked[tweets[i]])]
                     featureb = featureb + [len(linked[tweets[j]])]
-                    get_pos(linked[tweets[i]])
+                    featurea = featurea + get_pos(tweets[i])
+                    featureb = featureb + get_pos(tweets[j])
+                    featurea = featurea + get_time_of_day_vect(tweets[i])
+                    featureb = featureb + get_time_of_day_vect(tweets[j])
+
+                    final_feature = []
+                    print len(featurea)
+                    print len(featureb)
+                    print "\n\n\n\n"
+                    for i in range(0,len(featurea)):
+                        final_feature.append(int(featurea[i]) - int(featureb[i]))
+
+                    results = get_result_popularity(tweets[i], tweets[j])
+
+
 
 
             except Exception as e:

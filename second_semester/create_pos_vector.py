@@ -8,8 +8,6 @@ import operator
 import random
 import math
 import sys
-import unigrammodel
-from constant import *
 import time
 from collections import OrderedDict
 
@@ -102,7 +100,7 @@ def process_chunk(tweets):
     tweets_map = OrderedDict()
     i = 0
     # temp_map = {} # id->pos_tag vector
-    print len(tweets)
+    print(len(tweets))
     for item in tweets:
         i += 1
         # print "inside: " + str(i)
@@ -126,21 +124,21 @@ def process_chunk(tweets):
             tweets_map[item[0]] = len(new_tokens)
             process_list = process_list + new_tokens
 
-    print "starting nltk stuff"
+    print("starting nltk stuff")
     start = time.time() # 134.500674009
     i = 0
     tagged1 = nltk.pos_tag(process_list)
-    print "done with nltk stuff"
+    print("done with nltk stuff")
     for x in tweets_map.keys():
         # print x
         length = tweets_map[x]
         tagged = tagged1[:length]
         tagged1 = tagged1[length:]
         pos_features = get_pos_features(tagged)
-        print('\n ')
-        print(tagged)
-        print(pos_features)
-        print(' \n')
+        # print('\n ')
+        # print(tagged)
+        # print(pos_features)
+        # print(' \n')
         db_read.execute("insert into FullVector(tweet_id, full_vector) values (?, ?);", [x, pos_features])
 
         # if str(tagged) != str(temp_map[x]):
@@ -160,7 +158,7 @@ def process_chunk(tweets):
 
 for item in tweets:
     temp_tweets.append(item)
-for i in range(0,len(temp_tweets)/CHUNK_SIZE):
+for i in range(0,int(len(temp_tweets)/CHUNK_SIZE)):
     process_chunk(temp_tweets[:CHUNK_SIZE])
     temp_tweets = temp_tweets[CHUNK_SIZE:]
     print("{} chunks processed".format(i))
