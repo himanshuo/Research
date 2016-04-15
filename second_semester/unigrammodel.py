@@ -14,7 +14,7 @@ from constant import *
 class UnigramModel:
 
     def __init__(self,list_of_documents,stopwords):
-        print "started"
+
         num_docs = len(list_of_documents)
         self.list_of_documents = list_of_documents
         self.doc_freq = {}
@@ -26,6 +26,7 @@ class UnigramModel:
             for word in set(self.process_document(doc)):
                 if word not in stopwords:
                     try:
+                        str(word)
                         self.doc_freq[word] += 1
                     except:
                         self.doc_freq[word] = 1
@@ -34,6 +35,9 @@ class UnigramModel:
             if self.doc_freq[word] > self.threshold:
                 self.idf[word] = 1.0 + math.log((num_docs + 0.0)/(self.doc_freq[word]))
         self.dict_list = self.doc_freq.keys()
+
+    def get_vector_description(self):
+        return list(self.dict_list)
 
     def get_vector_list(self,document):
         vec = self.get_vector(document)

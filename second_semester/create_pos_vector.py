@@ -10,6 +10,7 @@ import math
 import sys
 import time
 from collections import OrderedDict
+from constant import *
 
 
 input_database = 'second.db'
@@ -22,55 +23,7 @@ tokenizer = nltk.tokenize.treebank.TreebankWordTokenizer()
 tweets = db_read.execute("SELECT * from Tweet")
 temp_tweets = []
 
-POS_INDEX = {
-    'CC':0,
-    'CD':1,
-    'DT':2,
-    'EX':3,
-    'FW':4,
-    'IN':5,
-    'JJ':6,
-    'JJS':7,
-    'LS': 8,
-    'MD': 9,
-    'NN': 10,
-    'NNS': 11,
-    'NNP': 12,
-    'NNPS': 13,
-    'PDT': 14,
-    'POS': 15,
-    'PRP': 16,
-    'PRP$': 17,
-    'RB': 18,
-    'RBR': 19,
-    'RBS': 20,
-    'RP': 21,
-    'TO': 22,
-    'UH': 23,
-    'VB': 24,
-    'VBD': 25,
-    'VBG': 26,
-    'VBN': 27,
-    'VBP': 28,
-    'VBZ': 29,
-    'WDT': 30,
-    'WP': 31,
-    'WP$': 32,
-    'WRB':33,
-    'NOUN':34,
-    'VERB':35,
-    'ADJECTIVE':36,
-    'PRONOUN':37,
-    'ADVERB': 38,
-    'JJR':39,
-    '.':40,
-    ':':41,
-    ',':42,
-    '(':43,
-    ')':44,
-    '\'\'':45,
-    ';':46,
-}
+
 
 def get_pos_features(tagger):
     out = [0 for i in range(0,len(POS_INDEX))]
